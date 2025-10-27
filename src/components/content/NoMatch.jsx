@@ -1,8 +1,8 @@
 import { Link } from "react-router";
 
-function NoMatch() {
+export default function NoMatch() {
     return (
-        <div>
+        <div style={{ padding: 8 }}>
             <h2>That's a 404.</h2>
             <p>Uh oh, looks like you're lost!</p>
             <p>
@@ -11,5 +11,3 @@ function NoMatch() {
         </div>
     );
 }
-
-export default NoMatch;

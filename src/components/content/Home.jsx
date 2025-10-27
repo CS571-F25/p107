@@ -1,7 +1,3 @@
 export default function Home() {
-    return (
-        <div>
-            <h1>Orient Way</h1>
-        </div>
-    );
+  return <div style={{ padding: 8 }}>Welcome! This is the home page.</div>;
 }

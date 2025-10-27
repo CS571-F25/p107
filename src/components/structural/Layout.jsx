@@ -1,9 +1,10 @@
 // Layout component: navbar + theme switcher + content outlet
 
 import { useContext, useEffect, useState } from 'react';
-import { Container, Navbar, Nav } from 'react-bootstrap';
+import { Container, Navbar, Nav, NavDropdown } from 'react-bootstrap';
 import { Link, Outlet } from 'react-router';
 import ThemeContext from '../contexts/ThemeContext.jsx';
+import LoginStatusContext from '../contexts/LoginStatusContext.js';
 import Footer from './Footer.jsx';
 
 function ThemeSwitcher() {
@@ -73,6 +74,8 @@ export default function Layout() {
         'py-2'
     ].join(' ');
 
+    const auth = useContext(LoginStatusContext);
+
     return (
     <div className="d-flex flex-column min-vh-100">
         {/* Navigation bar */}
@@ -85,6 +88,16 @@ export default function Layout() {
                 <Nav className="me-auto align-items-center">
                     <Nav.Link as={Link} to="/">Home</Nav.Link>
                     <Nav.Link as={Link} to="/now">Now</Nav.Link>
+                    <NavDropdown title="Involve">
+                        {auth?.isLoggedIn ? (
+                            <NavDropdown.Item as={Link} to="/logout">Logout</NavDropdown.Item>
+                        ) : (
+                            <>
+                                <NavDropdown.Item as={Link} to="/register">Register</NavDropdown.Item>
+                                <NavDropdown.Item as={Link} to="/login">Login</NavDropdown.Item>
+                            </>
+                        )}
+                    </NavDropdown>
                 </Nav>
                 <span className="ms-3"><ThemeSwitcher /></span>
             </Container>

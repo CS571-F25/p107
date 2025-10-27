@@ -1,7 +1,7 @@
 export default function Now() {
     const lastUpdated = "October 26, 2025"; // Example date, replace with actual last updated date
     return (
-        <div>
+        <div style={{ padding: 8 }}>
             <h1>What I'm Up To Now</h1>
             <p>Last updated: {lastUpdated}</p>
 
