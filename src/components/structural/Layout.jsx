@@ -74,7 +74,7 @@ export default function Layout() {
     ].join(' ');
 
     return (
-    <>
+    <div className="d-flex flex-column min-vh-100">
         {/* Navigation bar */}
         <Navbar expand="sm" className={navbarClasses}>
             <Container fluid>
@@ -91,12 +91,12 @@ export default function Layout() {
         </Navbar>
 
         {/* Page body (excluding navbar) */}
-        <Container className="py-4">
+        <Container className="flex-grow-1 py-4">
             <Outlet />
         </Container>
 
         {/* Footer */}
         <Footer />
-    </>
+    </div>
     );
 }

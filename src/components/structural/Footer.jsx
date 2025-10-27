@@ -11,7 +11,7 @@ export default function Footer() {
 
   return (
     <footer
-      className={`border-top mt-5 pt-5 pb-3 ${
+      className={`mt-auto pt-5 pb-3 ${
         isDark ? 'bg-dark text-light' : 'bg-light text-dark'
       }`}
     >
