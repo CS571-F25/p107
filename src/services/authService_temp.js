@@ -1,4 +1,4 @@
-// Firebase Authentication service
+// Firebase Authentication  Firebase Authentication service
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
@@ -13,16 +13,16 @@ import {
 import { auth } from '../firebase/config.js';
 
 /**
- * Register new user
+ * ¨å?/ Register new user
  * @param {Object} payload - { email, password, nickname }
  * @returns {Promise<Object>} - { ok: true }
  */
 export async function register({ email, password, nickname }) {
   try {
-    // Create Firebase user
+    //  Firebase ¨æ Create Firebase user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
-    // If nickname provided, update profile
+    
+    // ¨æ If nickname provided, update profile
     if (nickname) {
       await updateProfile(userCredential.user, {
         displayName: nickname
@@ -31,7 +31,7 @@ export async function register({ email, password, nickname }) {
     
     return { ok: true };
   } catch (error) {
-    // Handle Firebase error codes
+    //  Firebase ¯¯?/ Handle Firebase error codes
     const errorMessages = {
       'auth/email-already-in-use': 'This email is already registered.',
       'auth/invalid-email': 'Invalid email address.',
@@ -42,17 +42,17 @@ export async function register({ email, password, nickname }) {
 }
 
 /**
- * User login
+ * ¨æ User login
  * @param {Object} payload - { email, password }
  * @returns {Promise<Object>} - { token, user: { email, nickname } }
  */
 export async function login({ email, password }) {
   try {
-    // Firebase sign in
+    // Firebase  Firebase sign in
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // Get ID token (for backend verification)
+    //  ID Token¯é/ Get ID token (for backend verification)
     const token = await user.getIdToken();
     
     return {
@@ -63,7 +63,7 @@ export async function login({ email, password }) {
       }
     };
   } catch (error) {
-    // Handle Firebase error codes
+    //  Firebase ¯¯?/ Handle Firebase error codes
     const errorMessages = {
       'auth/user-not-found': 'Invalid email or password.',
       'auth/wrong-password': 'Invalid email or password.',
@@ -76,7 +76,7 @@ export async function login({ email, password }) {
 }
 
 /**
- * User logout
+ * ¨æ User logout
  * @returns {Promise<Object>} - { ok: true }
  */
 export async function logout() {
@@ -89,18 +89,21 @@ export async function logout() {
 }
 
 /**
- * Get current stored auth info
+ * ®¤?/ Get current stored auth info
+ * Firebase  onAuthStateChanged ªå¡ç­¤®¹?
  * Firebase manages this via onAuthStateChanged, keep for compatibility
  * @returns {Object} - { token: null, user: null }
  */
 export function getStoredAuth() {
+  // Firebase  onAuthStateChanged ¨ç®¡?
   // Firebase uses onAuthStateChanged listener to manage state
+  // ¤å£ç AuthProvider ¡ç
   // This function is for legacy compatibility, actual state managed by AuthProvider
   return { token: null, user: null };
 }
 
 /**
- * Send email verification
+ * €?/ Send email verification
  * @param {Object} user - Firebase user object (optional, defaults to current user)
  * @returns {Promise<Object>} - { ok: true }
  */
@@ -123,7 +126,7 @@ export async function sendVerificationEmail(user = null) {
 }
 
 /**
- * Send password reset email
+ * €®é?/ Send password reset email
  * @param {string} email - User's email address
  * @returns {Promise<Object>} - { ok: true }
  */
@@ -142,7 +145,7 @@ export async function sendPasswordReset(email) {
 }
 
 /**
- * Verify email verification code
+ * ®ç®±?/ Verify email verification code
  * @param {string} actionCode - Action code from email link
  * @returns {Promise<Object>} - { ok: true }
  */
@@ -162,7 +165,7 @@ export async function verifyEmail(actionCode) {
 }
 
 /**
- * Verify password reset code
+ * ?/ Verify password reset code
  * @param {string} actionCode - Action code from reset email
  * @returns {Promise<string>} - User's email address
  */
@@ -182,7 +185,7 @@ export async function verifyPasswordResetToken(actionCode) {
 }
 
 /**
- * Confirm password reset
+ * ®è®¤ Confirm password reset
  * @param {string} actionCode - Action code from reset email
  * @param {string} newPassword - New password
  * @returns {Promise<Object>} - { ok: true }
@@ -204,7 +207,7 @@ export async function resetPassword(actionCode, newPassword) {
 }
 
 /**
- * Check if current user has verified email
+ * €¥å¦å®ç®± Check if current user has verified email
  * @returns {boolean} - true if email is verified
  */
 export function isEmailVerified() {
@@ -212,8 +215,8 @@ export function isEmailVerified() {
 }
 
 /**
- * Reload current user data
- * Used to refresh emailVerified status
+ * ¨æ Reload current user data
+ * ¨ä emailVerified €?/ Used to refresh emailVerified status
  * @returns {Promise<void>}
  */
 export async function reloadUser() {

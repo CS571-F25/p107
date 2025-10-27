@@ -38,8 +38,8 @@ export default function Footer() {
           <Col md={6}>
             <h6 className="fw-bold mb-3">Internal Links</h6>
             <ul className="list-unstyled">
-              <li><a href="#/" className="fw-semibold text-decoration-none">Home</a></li>
-              <li><a href="#/now" className="fw-semibold text-decoration-none">Now</a></li>
+              <li><a href="#/" className="fw-semibold text-decoration-none text-reset">Home</a></li>
+              <li><a href="#/now" className="fw-semibold text-decoration-none text-reset">Now</a></li>
             </ul>
             <small className="text-secondary d-block mt-3">
               This site represents the author's opinion and is for informational purposes only. 
@@ -85,9 +85,9 @@ export default function Footer() {
             </div>
 
             <small className="text-secondary d-block">
-              Built with <a href="https://react.dev" className="text-decoration-none">React</a> 
-              , styled with <a href="https://getbootstrap.com/" className="text-decoration-none">Bootstrap</a>, 
-              deployed on <a href="https://pages.github.com" className="text-decoration-none">GitHub Pages</a>.
+              Built with <a href="https://react.dev" className="text-decoration-none text-reset">React</a> 
+              , styled with <a href="https://getbootstrap.com/" className="text-decoration-none text-reset">Bootstrap</a>, 
+              deployed on <a href="https://pages.github.com" className="text-decoration-none text-reset">GitHub Pages</a>.
             </small>
           </Col>
         </Row>

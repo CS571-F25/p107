@@ -12,8 +12,8 @@ export default function Logout() {
   }, []);
 
   return (
-    <div style={{ maxWidth: 420 }}>
-      <h3>Sign out</h3>
+    <div style={{ maxWidth: 800, padding: '1rem' }}>
+      <h1>Sign out</h1>
       <div style={{ marginTop: 8 }}>
         {done ? (
           <>

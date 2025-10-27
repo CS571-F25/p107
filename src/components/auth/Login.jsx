@@ -15,8 +15,8 @@ export default function Login() {
 
   if (auth?.isLoggedIn) {
     return (
-      <div style={{ maxWidth: 420 }}>
-        <h3>Already signed in</h3>
+      <div style={{ maxWidth: 800, padding: '1rem' }}>
+        <h1>Already signed in</h1>
         <p>
           Go to <Link to="/">Home</Link> or <Link to="/logout">Sign out</Link>.
         </p>
@@ -39,8 +39,8 @@ export default function Login() {
   };
 
   return (
-    <form onSubmit={submit} style={{ maxWidth: 420 }}>
-      <h3>Sign in</h3>
+    <form onSubmit={submit} style={{ maxWidth: 800, padding: '1rem' }}>
+      <h1>Sign in</h1>
       {err && <div style={{ color: "crimson", marginBottom: 8 }}>{err}</div>}
       <div style={{ marginBottom: 8 }}>
         <label>Email</label>
@@ -61,6 +61,11 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <Link to="/forgot-password" style={{ fontSize: 14 }}>
+          Forgot password?
+        </Link>
       </div>
       <button type="submit" disabled={loading}>
         {loading ? "Signing in..." : "Sign in"}

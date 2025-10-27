@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import LoginStatusContext from "../contexts/LoginStatusContext";
+import { sendVerificationEmail } from "../../services/authService";
 
 export default function Register() {
   const auth = useContext(LoginStatusContext);
@@ -20,6 +21,13 @@ export default function Register() {
     setLoading(true);
     try {
       await auth.register({ email, password, nickname });
+      
+      try {
+        await sendVerificationEmail();
+      } catch (emailError) {
+        console.warn("Failed to send verification email:", emailError);
+      }
+      
       setOk(true);
       setTimeout(() => nav("/login"), 600);
     } catch (e) {
@@ -30,8 +38,8 @@ export default function Register() {
   };
 
   return (
-    <form onSubmit={submit} style={{ maxWidth: 480 }}>
-      <h3>Create account</h3>
+    <form onSubmit={submit} style={{ maxWidth: 800, padding: '1rem' }}>
+      <h1>Create account</h1>
       {ok && (
         <div style={{ color: "green", marginBottom: 8 }}>
           Registration successful. Redirecting to sign-in…

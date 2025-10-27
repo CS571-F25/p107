@@ -14,6 +14,7 @@ import ProtectedRoute from "../auth/ProtectedRoute.jsx";
 import Register from "../auth/Register";
 import Login from "../auth/Login";
 import Logout from "../auth/Logout";
+import ForgotPassword from "../auth/ForgotPassword";
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
                 <Route path="register" element={<Register />} />
                 <Route path="login" element={<Login />} />
                 <Route path="logout" element={<Logout />} />
+                <Route path="forgot-password" element={<ForgotPassword />} />
 
                 {/* Protected routes can be wrapped like this: */}
                 <Route
