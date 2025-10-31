@@ -1,9 +1,14 @@
 import { Card, Badge } from 'react-bootstrap';
 import { Link } from 'react-router';
 import { formatDistanceToNow } from 'date-fns';
+import { useContext } from 'react';
+import ThemeContext from '../contexts/ThemeContext';
 import '../../styles/blog-theme-links.css';
 
 export default function BlogCard({ post, theme = 'blue' }) {
+  const { theme: currentTheme } = useContext(ThemeContext);
+  const isDark = currentTheme === 'dark';
+  
   const {
     id,
     title,
@@ -52,6 +57,16 @@ export default function BlogCard({ post, theme = 'blue' }) {
   };
 
   const cardTheme = getThemeFromCategory(category) || theme;
+
+  // Dynamic tag styles for light/dark mode
+  const tagStyle = {
+    fontSize: '0.7rem',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(108, 117, 125, 0.8)',
+    color: '#ffffff',  // 在所有模式下都使用白色文字
+    border: isDark ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(108, 117, 125, 0.9)',
+    fontWeight: '500',
+    backdropFilter: isDark ? 'blur(8px)' : 'none'
+  };
 
   return (
     <Card className={`h-100 shadow-sm border-0 mb-4 card card-${cardTheme}`}>
@@ -133,11 +148,7 @@ export default function BlogCard({ post, theme = 'blue' }) {
                   key={index}
                   variant="outline-secondary"
                   className="border-0"
-                  style={{ 
-                    fontSize: '0.7rem',
-                    backgroundColor: 'rgba(108, 117, 125, 0.1)',
-                    color: '#6c757d'
-                  }}
+                  style={tagStyle}
                 >
                   {tag}
                 </Badge>
@@ -146,11 +157,7 @@ export default function BlogCard({ post, theme = 'blue' }) {
                 <Badge 
                   variant="outline-secondary"
                   className="border-0"
-                  style={{ 
-                    fontSize: '0.7rem',
-                    backgroundColor: 'rgba(108, 117, 125, 0.1)',
-                    color: '#6c757d'
-                  }}
+                  style={tagStyle}
                 >
                   +{tags.length - 3}
                 </Badge>

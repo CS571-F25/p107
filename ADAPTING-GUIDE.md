@@ -111,18 +111,68 @@ This project uses Firebase for user authentication and data storage. Follow thes
 ### Step 5: Configure Firestore Security Rules
 
 1. Go to **Firestore Database** → **Rules** tab
-2. Replace the default rules with:
+2. Choose one of the following security rule configurations based on your needs:
+
+#### Option A: Public Blog with Owner-Only Write Access (Recommended for Blogs)
+
+For a public blog where anyone can read but only you can write:
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only read/write their own data
+    // Blog posts: Public read, owner-only write
+    match /posts/{postId} {
+      allow read: if true; // Anyone can read published posts
+      allow write: if request.auth != null && request.auth.uid == 'YOUR_USER_ID_HERE';
+    }
+    
+    // Test collection (optional for debugging)
+    match /test/{document} {
+      allow read, write: if request.auth != null && request.auth.uid == 'YOUR_USER_ID_HERE';
+    }
+  }
+}
+```
+
+**To get your User ID:**
+1. Log in to your account
+2. Visit `/admin/test` page
+3. Copy the displayed User ID (UID)
+4. Replace `YOUR_USER_ID_HERE` with your actual UID
+
+#### Option B: Email Domain-Based Access
+
+For organizations where multiple users with the same email domain should have write access:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Blog posts: Public read, domain-restricted write
+    match /posts/{postId} {
+      allow read: if true; // Anyone can read published posts
+      allow write: if request.auth != null && 
+                      request.auth.token.email.matches('.*@yourdomain\\.com');
+    }
+  }
+}
+```
+
+#### Option C: Multi-User Blog Platform
+
+For a platform where authenticated users can manage their own content:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Example: Posts collection
+    // Posts collection with author-based permissions
     match /posts/{postId} {
       allow read: if true; // Public read
       allow create: if request.auth != null; // Auth users can create
@@ -132,9 +182,12 @@ service cloud.firestore {
 }
 ```
 
-3. Click **Publish**
+3. **Copy your chosen rules** to the Firebase Console
+4. Click **Publish**
 
-> ⚠️ **Important:** These rules ensure only authenticated users can access data. Adjust them based on your needs.
+> ⚠️ **Security Note:** Option A (owner-only) is recommended for personal blogs. It ensures maximum security while keeping content publicly readable.
+
+> 💡 **Testing:** Use the `/admin/test` page to verify your rules are working correctly after deployment.
 
 ### Step 6: Create Environment File
 
@@ -366,11 +419,37 @@ Add your custom domain to Firebase Console → Authentication → Settings → A
 <a id="security-best-practices"></a>
 ## 🔐 Security Best Practices
 
+### Firebase Configuration
 1. **Never commit `.env.local`** — It's in `.gitignore`, but double-check
 2. **Firebase API keys are safe in client code** — They identify your project, not authenticate it
 3. **Protect data with Firestore Security Rules** — Server-side validation is crucial
-4. **Enable email verification** — Reduces spam accounts
-5. **Monitor Firebase usage** — Set up budget alerts in Firebase Console
+
+### Firestore Security Rules Guidelines
+4. **Use specific user ID for personal blogs** — Most secure option
+   ```javascript
+   allow write: if request.auth != null && request.auth.uid == 'specific-uid';
+   ```
+5. **Always allow public read for blog content** — Unless it's a private blog
+   ```javascript
+   allow read: if true; // Public blog posts
+   ```
+6. **Test your rules regularly** — Use `/admin/test` to verify permissions
+7. **Monitor suspicious activity** — Check Firebase Console → Usage for unexpected patterns
+
+### Authentication Security
+8. **Enable email verification** — Reduces spam accounts and ensures valid emails
+9. **Use strong password requirements** — Firebase handles this by default
+10. **Monitor failed login attempts** — Available in Firebase Console → Authentication
+
+### Deployment Security
+11. **Add only necessary domains to authorized domains** — Don't use wildcards
+12. **Set up Firebase budget alerts** — Prevent unexpected charges
+13. **Regularly review Firebase project members** — Remove unused accounts
+
+### Content Security
+14. **Validate content on both client and server** — Don't trust client-side validation alone
+15. **Sanitize user input** — Especially important for blog content
+16. **Implement content moderation** — For user-generated content
 
 ---
 
@@ -384,6 +463,22 @@ Add your custom domain to Firebase Console → Authentication → Settings → A
 
 - **"Firebase: Error (auth/unauthorized-domain)"**
   - Add your domain to Firebase Console → Authentication → Authorized domains
+
+### Firestore Permission Errors
+- **"Access denied. Please check your permissions."**
+  - Update your Firestore security rules (see Step 5 above)
+  - Use `/admin/test` page to verify your rules
+  - Ensure you're using the correct User ID in your rules
+
+- **"Missing or insufficient permissions"**
+  - Check if you're logged in when trying to write data
+  - Verify your security rules allow the operation
+  - Test with Firebase Console → Firestore → Rules Playground
+
+- **Blog posts not loading for visitors**
+  - Ensure your security rules have `allow read: if true;` for posts
+  - Check that posts collection exists in Firestore
+  - Verify there are published posts in the database
 
 ### Build Errors
 - **"Cannot find module 'firebase'"**
