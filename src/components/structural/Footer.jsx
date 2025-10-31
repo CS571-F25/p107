@@ -56,11 +56,14 @@ export default function Footer() {
                 <a href="https://www.linkedin.com/in/zzhu-eliot/" target="_blank" rel="noopener noreferrer" className="text-reset fs-5">
                     <i className="bi bi-linkedin"></i>
                 </a>
-                <a href="https://x.com/EliotOrientWay" target="_blank" rel="noopener noreferrer" className="text-reset fs-5">
+                {/* <a href="https://x.com/EliotOrientWay" target="_blank" rel="noopener noreferrer" className="text-reset fs-5">
                     <i className="bi bi-twitter-x"></i>
+                </a> */}
+                <a href="https://www.strava.com/athletes/151920511" target="_blank" rel="noopener noreferrer" className="text-reset fs-5" title="Strava">
+                    <i className="bi bi-strava"></i>
                 </a>
                 {/* Xiaohongshu icon */}
-                <a
+                {/* <a
                     href="https://www.xiaohongshu.com/user/profile/5d35d92d0000000010027a5a"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -78,7 +81,7 @@ export default function Footer() {
                         transition: 'transform 0.2s ease, color 0.3s ease',
                         }}
                     />
-                </a>
+                </a> */}
                     <a href="mailto:zhu.ziqi@foxmail.com" className="text-reset fs-5">
                     <i className="bi bi-envelope"></i>
                 </a>

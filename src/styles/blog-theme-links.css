@@ -1,0 +1,150 @@
+/* 
+ * Blog Theme Link & Card System (single underline + soft hover highlight)
+ */
+:root {
+  /* Primary theme colors */
+  --c-blue: 208 100% 64%;
+  --c-blue-soft: 204 51% 66%;
+  --c-teal: 197 44% 46%;
+  --c-teal-soft: 197 44% 66%;
+  --c-red: 6 53% 69%;
+  --c-red-soft: 6 53% 82%;
+  --c-brown: 21 31% 46%;
+  --c-brown-soft: 21 31% 66%;
+
+  /* Opacity */
+  --alpha-line: 0.35;   /* Default "line" medium depth */
+  --alpha-bg: 0.20;     /* Hover background softness */
+
+  /* Geometry parameters (key 3 parameters) */
+  --u-thick: 2px;       /* Line thickness */
+  --u-gap: 0.26em;      /* Line to text "controllable spacing" */
+  --hl-height: 1.10em;  /* Hover capsule height (don't exceed line-height too much) */
+  --side-bleed: .22em;  /* Left/right bleed, capsule wider */
+}
+
+/* ========== Single "self-drawn line" links ========== */
+a.theme-link {
+  text-decoration: none;                 /* Disable native underline to avoid two lines */
+  display: inline;
+  padding: 0 var(--side-bleed) var(--u-gap);  /* Use padding-bottom to create underline "shift down" */
+  border-radius: .28rem;
+
+  /* Key: use background to draw line, line sticks to bottom; through content-box let padding-bottom form spacing */
+  background-repeat: no-repeat;
+  background-size: 100% var(--u-thick);  /* Default only one thin line */
+  background-position: 0 100%;
+  background-origin: content-box;
+  background-clip: content-box;
+
+  transition: background-size .18s ease,
+              background-color .18s ease,
+              background-clip .18s ease;
+}
+
+/* ——Colors (default state: text + light line)—— */
+a.link-blue {
+  color: hsl(var(--c-blue));
+  background-image: linear-gradient(hsl(var(--c-blue) / var(--alpha-line)),
+                                    hsl(var(--c-blue) / var(--alpha-line)));
+}
+a.link-teal {
+  color: hsl(var(--c-teal));
+  background-image: linear-gradient(hsl(var(--c-teal) / var(--alpha-line)),
+                                    hsl(var(--c-teal) / var(--alpha-line)));
+}
+a.link-red {
+  color: hsl(var(--c-red));
+  background-image: linear-gradient(hsl(var(--c-red) / var(--alpha-line)),
+                                    hsl(var(--c-red) / var(--alpha-line)));
+}
+a.link-brown {
+  color: hsl(var(--c-brown));
+  background-image: linear-gradient(hsl(var(--c-brown) / var(--alpha-line)),
+                                    hsl(var(--c-brown) / var(--alpha-line)));
+}
+
+/* ——hover: same layer background from "line" stretched to capsule, still grows from bottom—— */
+a.link-blue:hover {
+  background-image: linear-gradient(hsl(var(--c-blue-soft) / var(--alpha-bg)),
+                                    hsl(var(--c-blue-soft) / var(--alpha-bg)));
+  background-size: 100% var(--hl-height);
+  background-clip: padding-box;   /* Let highlight cover padding area to form rounded capsule */
+}
+a.link-teal:hover {
+  background-image: linear-gradient(hsl(var(--c-teal-soft) / var(--alpha-bg)),
+                                    hsl(var(--c-teal-soft) / var(--alpha-bg)));
+  background-size: 100% var(--hl-height);
+  background-clip: padding-box;
+}
+a.link-red:hover {
+  background-image: linear-gradient(hsl(var(--c-red-soft) / var(--alpha-bg)),
+                                    hsl(var(--c-red-soft) / var(--alpha-bg)));
+  background-size: 100% var(--hl-height);
+  background-clip: padding-box;
+}
+a.link-brown:hover {
+  background-image: linear-gradient(hsl(var(--c-brown-soft) / var(--alpha-bg)),
+                                    hsl(var(--c-brown-soft) / var(--alpha-bg)));
+  background-size: 100% var(--hl-height);
+  background-clip: padding-box;
+}
+
+/* ===== Blog Card Theme System (keep your writing unchanged) ===== */
+.card-title { font-weight: 600; line-height: 1.3; transition: color .2s ease; }
+.card-blue  .card-title { color: hsl(var(--c-blue));  }
+.card-teal  .card-title { color: hsl(var(--c-teal));  }
+.card-red   .card-title { color: hsl(var(--c-red));   }
+.card-brown .card-title { color: hsl(var(--c-brown)); }
+.card-blue:hover  .card-title { color: hsl(var(--c-blue)  / 0.85); }
+.card-teal:hover  .card-title { color: hsl(var(--c-teal)  / 0.85); }
+.card-red:hover   .card-title { color: hsl(var(--c-red)   / 0.85); }
+.card-brown:hover .card-title { color: hsl(var(--c-brown) / 0.85); }
+
+.card-date {
+  display: inline-block; font-size: .75rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .5px;
+  padding: .25em .5em; border-radius: .3rem; color: #fff;
+  transition: filter .2s ease;
+}
+.card-blue  .card-date { background-color: hsl(var(--c-blue)  / 0.90); }
+.card-teal  .card-date { background-color: hsl(var(--c-teal)  / 0.90); }
+.card-red   .card-date { background-color: hsl(var(--c-red)   / 0.90); }
+.card-brown .card-date { background-color: hsl(var(--c-brown) / 0.90); }
+.card:hover .card-date { filter: brightness(1.1); }
+
+/* Dark theme tweaks */
+[data-bs-theme="dark"] { 
+  --alpha-line: 0.45; 
+  --alpha-bg: 0.22; 
+}
+
+/* Enhanced dark mode contrast for blog cards */
+[data-bs-theme="dark"] .card {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-bs-theme="dark"] .card:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .card-title {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+[data-bs-theme="dark"] .card-blue .card-title { color: hsl(var(--c-blue-soft)) !important; }
+[data-bs-theme="dark"] .card-teal .card-title { color: hsl(var(--c-teal-soft)) !important; }
+[data-bs-theme="dark"] .card-red .card-title { color: hsl(var(--c-red-soft)) !important; }
+[data-bs-theme="dark"] .card-brown .card-title { color: hsl(var(--c-brown-soft)) !important; }
+
+[data-bs-theme="dark"] .card-text {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-bs-theme="dark"] .card-date { 
+  filter: brightness(1.1); 
+  color: #fff !important;
+}
+[data-bs-theme="dark"] .card:hover .card-date { filter: brightness(1.2); }
