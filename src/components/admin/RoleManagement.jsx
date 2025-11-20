@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Button, Form, Alert, Modal, Badge, Dropdown } from 'react-bootstrap';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { useUserPermissions } from '../../hooks/usePermissions';
 import { db, auth } from '../../firebase/config';
 import { assignRoleExclusive, getUserRoles, cleanupDuplicateRoles } from '../../services/roleService';
 
@@ -14,6 +15,8 @@ export default function RoleManagement() {
   const [newRole, setNewRole] = useState('unverified_user');
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [cleaning, setCleaning] = useState(false);
+  const { isOwner, isAdmin } = useUserPermissions();
+  const isCurrentUserAdmin = isAdmin && !isOwner;
 
   useEffect(() => {
     fetchUsersWithRoles();
@@ -263,17 +266,28 @@ export default function RoleManagement() {
 
                           <td className="text-end">
                             <Dropdown>
-                              <Dropdown.Toggle variant="outline-secondary" size="sm">
+                              <Dropdown.Toggle variant="outline-secondary" size="sm" disabled={isCurrentUserAdmin && (user.roles || []).includes('owner')}>
                                 Actions
                               </Dropdown.Toggle>
                               <Dropdown.Menu align="end">
                                 <Dropdown.Item
                                   onClick={() => {
+                                    // Compute allowed role options for current user
+                                    const allowedRoles = isOwner
+                                      ? ['verified_user', 'unverified_user', 'admin', 'owner']
+                                      : isCurrentUserAdmin
+                                        ? ['verified_user', 'unverified_user', 'guest']
+                                        : ['verified_user', 'unverified_user', 'admin', 'owner'];
+
+                                    // Derive a safe initial value
+                                    const currentRole = (user.roles && user.roles[0]) || 'unverified_user';
+                                    const initialRole = allowedRoles.includes(currentRole) ? currentRole : allowedRoles[0];
+
                                     setSelectedUser(user);
-                                    setNewRole(user.roles[0] || 'unverified_user');
+                                    setNewRole(initialRole);
                                     setShowRoleModal(true);
                                   }}
-                                  disabled={user.isCurrentUser}
+                                  disabled={user.isCurrentUser || (isCurrentUserAdmin && (user.roles || []).includes('owner'))}
                                 >
                                   Change Role
                                 </Dropdown.Item>
@@ -310,12 +324,28 @@ export default function RoleManagement() {
               value={newRole} 
               onChange={(e) => setNewRole(e.target.value)}
             >
-              <option value="verified_user">Verified User (Level 2) - Can comment and like</option>
-              <option value="unverified_user">Unverified User (Level 3) - Can only read and like</option>
-              <option value="admin">Admin (Level 1) - Can manage articles</option>
-              {selectedUser?.isCurrentUser && (
-                <option value="owner">Owner (Level 0) - Full system access</option>
-              )}
+              {
+                // Determine allowed role options for current user
+                (() => {
+                  const roleLabels = {
+                    owner: 'Owner (Level 0) - Full system access',
+                    admin: 'Admin (Level 1) - Can manage articles',
+                    verified_user: 'Verified User (Level 2) - Can comment and like',
+                    unverified_user: 'Unverified User (Level 3) - Can only read and like',
+                    guest: 'Guest'
+                  };
+
+                  const allowedRoles = isOwner
+                    ? ['verified_user', 'unverified_user', 'admin', 'owner']
+                    : isCurrentUserAdmin
+                      ? ['verified_user', 'unverified_user', 'guest']
+                      : ['verified_user', 'unverified_user', 'admin', 'owner'];
+
+                  return allowedRoles.map(r => (
+                    <option key={r} value={r}>{roleLabels[r] || r}</option>
+                  ));
+                })()
+              }
             </Form.Select>
           </Form.Group>
         </Modal.Body>

@@ -13,7 +13,7 @@ const AdminLayout = () => {
 
   const navLinks = [
     { path: '/admin/posts', label: 'Post Management', requiredPermission: isAdmin },
-    { path: '/admin/roles', label: 'Role Management', requiredPermission: isOwner },
+    { path: '/admin/roles', label: 'Role Management', requiredPermission: (isOwner || isAdmin) },
     { path: '/admin/setup', label: 'System Setup', requiredPermission: isOwner },
   ];
 

@@ -78,7 +78,7 @@ export default function SimpleDashboard() {
                   <Dashboard />
                 </Tab>
                 
-                {isOwner && (
+                {(isOwner || isAdmin) && (
                   <Tab eventKey="roles" title="Role Management">
                     <RoleManagement />
                   </Tab>

@@ -1,6 +1,6 @@
 // System initialization and setup utilities
 import { useState, useContext } from 'react';
-import { Container, Row, Col, Card, Button, Alert, Form } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Form, Accordion, Badge } from 'react-bootstrap';
 import { 
   initializeRoles, 
   assignRole, 
@@ -262,16 +262,20 @@ Every place has stories to tell, but only if you're willing to listen.
   };
 
   const cardStyle = {
-    backgroundColor: isDark ? '#2d3748' : '#fff',
-    borderColor: isDark ? '#4a5568' : '#dee2e6'
+    backgroundColor: isDark ? '#1f2937' : '#fff',
+    borderColor: isDark ? '#374151' : '#dee2e6'
   };
 
   return (
-    <Container fluid style={{ maxWidth: '1000px', padding: '2rem 1rem' }}>
+    <Container fluid style={{ maxWidth: '1400px', padding: '2rem 1rem' }}>
       <Row className="mb-4">
         <Col>
-          <h2 className="mb-1">System Setup</h2>
-          <p className="text-muted">Initialize your blog system and configure permissions</p>
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h2 className="mb-1">System Setup</h2>
+              <p className="text-muted mb-0">Initialize your blog system and configure permissions</p>
+            </div>
+          </div>
         </Col>
       </Row>
 
@@ -287,36 +291,28 @@ Every place has stories to tell, but only if you're willing to listen.
       )}
 
       <Row className="g-4">
-        {/* Role Setup */}
+        {/* Role System Setup - primary actions */}
         <Col md={6}>
           <Card style={cardStyle}>
             <Card.Header>
               <h5 className="mb-0">Role System Setup</h5>
             </Card.Header>
             <Card.Body>
-              <p className="text-muted">
-                Initialize the role-based access control system with default roles.
-              </p>
-              
+              <p className="text-muted">Initialize and manage core role settings.</p>
+
               <div className="d-grid gap-2">
+                {isOwner && (
+                  <Button
+                    variant="primary"
+                    onClick={handleInitializeRoles}
+                    disabled={loading}
+                  >
+                    {loading ? 'Initializing...' : 'Initialize Roles'}
+                  </Button>
+                )}
+
                 <Button
-                  variant="primary"
-                  onClick={handleInitializeRoles}
-                  disabled={loading}
-                >
-                  {loading ? 'Initializing...' : 'Initialize Roles'}
-                </Button>
-                
-                <Button
-                  variant="warning"
-                  onClick={handleAssignOwnerRole}
-                  disabled={loading || !isLoggedIn}
-                >
-                  {loading ? 'Assigning...' : 'Make Me Owner (Exclusive)'}
-                </Button>
-                
-                <Button
-                  variant="secondary"
+                  variant="outline-secondary"
                   onClick={handleAssignDefaultRole}
                   disabled={loading || !isLoggedIn}
                 >
@@ -324,23 +320,25 @@ Every place has stories to tell, but only if you're willing to listen.
                 </Button>
 
                 <Button
-                  variant="info"
+                  variant="outline-secondary"
                   onClick={handleCheckUserRoles}
                   disabled={loading || !isLoggedIn}
                 >
                   {loading ? 'Checking...' : 'Check My Roles'}
                 </Button>
 
-                <Button
-                  variant="danger"
-                  onClick={handleResetMyRoles}
-                  disabled={loading || !isLoggedIn}
-                >
-                  {loading ? 'Resetting...' : 'Reset to User Role'}
-                </Button>
+                {isOwner && (
+                  <Button
+                    variant="outline-secondary"
+                    onClick={handleResetMyRoles}
+                    disabled={loading || !isLoggedIn}
+                  >
+                    {loading ? 'Resetting...' : 'Reset to User Role'}
+                  </Button>
+                )}
 
                 <Button
-                  variant="success"
+                  variant="outline-secondary"
                   onClick={() => window.location.reload()}
                   disabled={loading}
                 >
@@ -354,50 +352,56 @@ Every place has stories to tell, but only if you're willing to listen.
                 </Alert>
               )}
 
-              {/* Current permissions display */}
+              {/* Status panel */}
               {isLoggedIn && (
-                <Alert variant="info" className="mt-3 mb-0">
-                  <strong>Current Status:</strong><br/>
-                  Level: {level} | 
-                  Owner: {isOwner ? 'Yes' : 'No'} | 
-                  Admin: {isAdmin ? 'Yes' : 'No'} | 
-                  Can Access Admin: {canAccessAdmin ? 'Yes' : 'No'}
-                </Alert>
+                <Card className="mt-3" style={cardStyle}>
+                  <Card.Body className="py-2">
+                    <div className="d-flex align-items-center">
+                      <strong className="me-3">Current Status</strong>
+                      <div className="text-muted small">
+                        <Badge bg="secondary" className="me-2">Level: {level}</Badge>
+                        <Badge bg={isOwner ? 'danger' : 'light'} text={isOwner ? undefined : 'dark'} className="me-2">Owner: {isOwner ? 'Yes' : 'No'}</Badge>
+                        <Badge bg={isAdmin ? 'warning' : 'light'} text={isAdmin ? undefined : 'dark'} className="me-2">Admin: {isAdmin ? 'Yes' : 'No'}</Badge>
+                        <Badge bg={canAccessAdmin ? 'success' : 'light'} text={canAccessAdmin ? undefined : 'dark'}>Admin Access: {canAccessAdmin ? 'Yes' : 'No'}</Badge>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
               )}
 
               {/* Role details */}
               {userRoles && (
-                <Alert variant="success" className="mt-3 mb-0">
-                  <strong>Your Roles:</strong><br/>
-                  {userRoles.length === 0 ? (
-                    'No roles assigned'
-                  ) : (
-                    userRoles.map((ur, index) => (
-                      <div key={index}>
-                        - {ur.role?.name || ur.roleId} (Level: {ur.role?.level})
-                      </div>
-                    ))
-                  )}
-                </Alert>
+                <Card className="mt-3" style={cardStyle}>
+                  <Card.Body className="py-2 small text-muted">
+                    <strong>Your Roles:</strong>
+                    <div className="mt-1">
+                      {userRoles.length === 0 ? (
+                        'No roles assigned'
+                      ) : (
+                        userRoles.map((ur, index) => (
+                          <div key={index}>- {ur.role?.name || ur.roleId} (Level: {ur.role?.level})</div>
+                        ))
+                      )}
+                    </div>
+                  </Card.Body>
+                </Card>
               )}
             </Card.Body>
           </Card>
         </Col>
 
-        {/* Content Setup */}
+        {/* Sample Content */}
         <Col md={6}>
           <Card style={cardStyle}>
             <Card.Header>
               <h5 className="mb-0">Sample Content</h5>
             </Card.Header>
             <Card.Body>
-              <p className="text-muted">
-                Create sample blog posts to test the system and demonstrate features.
-              </p>
-              
+              <p className="text-muted">Create example posts to test site behavior.</p>
+
               <div className="d-grid gap-2">
                 <Button
-                  variant="success"
+                  variant="primary"
                   onClick={handleCreateSamplePosts}
                   disabled={loading || !isLoggedIn}
                 >
@@ -414,45 +418,62 @@ Every place has stories to tell, but only if you're willing to listen.
           </Card>
         </Col>
 
-        {/* Manual Owner Setup */}
+        {/* Advanced / Debug Tools - collapsed */}
         <Col md={12}>
-          <Card style={cardStyle}>
-            <Card.Header>
-              <h5 className="mb-0">Manual Setup Instructions</h5>
-            </Card.Header>
-            <Card.Body>
-              <h6>Firestore Console Setup (Alternative Method)</h6>
-              <p className="text-muted">
-                If you prefer to set up manually through the Firestore console:
-              </p>
-              
-              <ol className="text-muted">
-                <li>Go to your Firebase Console → Firestore Database</li>
-                <li>Create a new collection called <code>userRoles</code></li>
-                <li>Add a document with these fields:
-                  <ul>
-                    <li><code>userId</code>: Your Firebase Auth UID</li>
-                    <li><code>roleId</code>: "owner"</li>
-                    <li><code>assignedBy</code>: "manual"</li>
-                    <li><code>assignedAt</code>: Current timestamp</li>
-                  </ul>
-                </li>
-                <li>Click "Initialize Roles" above to create the role definitions</li>
-              </ol>
+          <Accordion defaultActiveKey={null}>
+            <Accordion.Item eventKey="0">
+              <Accordion.Header>Advanced / Debug Tools</Accordion.Header>
+              <Accordion.Body>
+                <Card style={cardStyle} className="mb-3">
+                  <Card.Header>
+                    <h6 className="mb-0">Manual Setup Instructions</h6>
+                  </Card.Header>
+                  <Card.Body>
+                    <h6>Firestore Console Setup (Alternative Method)</h6>
+                    <p className="text-muted">If you prefer to set up manually through the Firestore console:</p>
+                    <ol className="text-muted">
+                      <li>Go to your Firebase Console → Firestore Database</li>
+                      <li>Create a new collection called <code>userRoles</code></li>
+                      <li>Add a document with these fields:
+                        <ul>
+                          <li><code>userId</code>: Your Firebase Auth UID</li>
+                          <li><code>roleId</code>: "owner"</li>
+                          <li><code>assignedBy</code>: "manual"</li>
+                          <li><code>assignedAt</code>: Current timestamp</li>
+                        </ul>
+                      </li>
+                      <li>Click "Initialize Roles" above to create the role definitions</li>
+                    </ol>
 
-              <Alert variant="warning">
-                <strong>Important:</strong> Only assign the owner role to trusted administrators. 
-                The owner role has full system access and cannot be restricted.
-              </Alert>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+                    <Alert variant="warning">
+                      <strong>Important:</strong> Only assign the owner role to trusted administrators. The owner role has full system access and cannot be restricted.
+                    </Alert>
+                  </Card.Body>
+                </Card>
 
-      {/* Debug Section */}
-      <Row className="mt-4">
-        <Col>
-          <PermissionDebug />
+                <Card style={cardStyle} className="mb-3">
+                  <Card.Header>
+                    <h6 className="mb-0">Permission Debug Tool</h6>
+                  </Card.Header>
+                  <Card.Body>
+                    <PermissionDebug />
+                  </Card.Body>
+                </Card>
+
+                <div className="text-end">
+                  {isOwner && (
+                    <Button
+                      variant="outline-danger"
+                      onClick={handleAssignOwnerRole}
+                      disabled={loading || !isLoggedIn}
+                    >
+                      {loading ? 'Assigning...' : 'Make Me Owner (Exclusive)'}
+                    </Button>
+                  )}
+                </div>
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
         </Col>
       </Row>
     </Container>
