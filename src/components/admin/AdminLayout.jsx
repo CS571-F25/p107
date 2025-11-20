@@ -1,20 +1,22 @@
 import { Outlet, Link, useLocation } from 'react-router';
 import { Container, Row, Col, Nav } from 'react-bootstrap';
 import { useUserPermissions } from '../../hooks/usePermissions';
+import { canManageRoles, canAccessSystemSetup, levelToRole, canManagePosts } from '../../config/rolePermissions';
 import { useContext } from 'react';
 import ThemeContext from '../contexts/ThemeContext';
 
 const AdminLayout = () => {
   const location = useLocation();
-  const { isOwner, isAdmin } = useUserPermissions();
+  const { level } = useUserPermissions();
+  const currentRole = levelToRole(level);
 
   const { theme } = useContext(ThemeContext);
   const isDark = theme === 'dark';
 
   const navLinks = [
-    { path: '/admin/posts', label: 'Post Management', requiredPermission: isAdmin },
-    { path: '/admin/roles', label: 'Role Management', requiredPermission: (isOwner || isAdmin) },
-    { path: '/admin/setup', label: 'System Setup', requiredPermission: isOwner },
+    { path: '/admin/posts', label: 'Post Management', requiredPermission: canManagePosts(currentRole) },
+    { path: '/admin/roles', label: 'Role Management', requiredPermission: canManageRoles(currentRole) },
+    { path: '/admin/setup', label: 'System Setup', requiredPermission: canAccessSystemSetup(currentRole) },
   ];
 
   return (

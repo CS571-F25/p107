@@ -12,6 +12,7 @@ import {
 } from '../../services/roleService';
 import { createPost } from '../../services/blogService';
 import { useUserPermissions } from '../../hooks/usePermissions';
+import { levelToRole, canAccessSystemSetup } from '../../config/rolePermissions';
 import { auth } from '../../firebase/config';
 import LoginStatusContext from '../contexts/LoginStatusContext';
 import ThemeContext from '../contexts/ThemeContext';
@@ -27,6 +28,8 @@ export default function SystemSetup() {
   const { theme } = useContext(ThemeContext);
   const { level, isOwner, isAdmin, canAccessAdmin } = useUserPermissions();
   const isDark = theme === 'dark';
+  const currentRole = levelToRole(level);
+  const canAccessSetup = canAccessSystemSetup(currentRole);
 
   const handleCheckUserRoles = async () => {
     try {
@@ -301,7 +304,7 @@ Every place has stories to tell, but only if you're willing to listen.
               <p className="text-muted">Initialize and manage core role settings.</p>
 
               <div className="d-grid gap-2">
-                {isOwner && (
+                {canAccessSetup && (
                   <Button
                     variant="primary"
                     onClick={handleInitializeRoles}
@@ -327,7 +330,7 @@ Every place has stories to tell, but only if you're willing to listen.
                   {loading ? 'Checking...' : 'Check My Roles'}
                 </Button>
 
-                {isOwner && (
+                {canAccessSetup && (
                   <Button
                     variant="outline-secondary"
                     onClick={handleResetMyRoles}
@@ -461,7 +464,7 @@ Every place has stories to tell, but only if you're willing to listen.
                 </Card>
 
                 <div className="text-end">
-                  {isOwner && (
+                  {canAccessSetup && (
                     <Button
                       variant="outline-danger"
                       onClick={handleAssignOwnerRole}

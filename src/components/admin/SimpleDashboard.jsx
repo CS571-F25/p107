@@ -2,6 +2,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Card, Tab, Tabs, Alert } from 'react-bootstrap';
 import { useUserPermissions } from '../../hooks/usePermissions';
+import { levelToRole, canManageRoles } from '../../config/rolePermissions';
 import ThemeContext from '../contexts/ThemeContext';
 import LoginStatusContext from '../contexts/LoginStatusContext';
 import Dashboard from './Dashboard';
@@ -12,8 +13,9 @@ export default function SimpleDashboard() {
   const [activeTab, setActiveTab] = useState('posts');
   const { isLoggedIn } = useContext(LoginStatusContext);
   const { theme } = useContext(ThemeContext);
-  const { level, isOwner, isAdmin, canAccessAdmin, loading } = useUserPermissions();
+  const { level, isOwner, canAccessAdmin, loading } = useUserPermissions();
   const isDark = theme === 'dark';
+  const currentRole = levelToRole(level);
 
   if (!isLoggedIn) {
     return (
@@ -78,7 +80,7 @@ export default function SimpleDashboard() {
                   <Dashboard />
                 </Tab>
                 
-                {(isOwner || isAdmin) && (
+                {(canManageRoles(currentRole)) && (
                   <Tab eventKey="roles" title="Role Management">
                     <RoleManagement />
                   </Tab>

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Button, Form, Alert, Modal, Badge, Dropdown } from 'react-bootstrap';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { useUserPermissions } from '../../hooks/usePermissions';
+import { levelToRole, canManageRoles, isOwnerRole } from '../../config/rolePermissions';
 import { db, auth } from '../../firebase/config';
 import { assignRoleExclusive, getUserRoles, cleanupDuplicateRoles } from '../../services/roleService';
 
@@ -15,8 +16,10 @@ export default function RoleManagement() {
   const [newRole, setNewRole] = useState('unverified_user');
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [cleaning, setCleaning] = useState(false);
-  const { isOwner, isAdmin } = useUserPermissions();
-  const isCurrentUserAdmin = isAdmin && !isOwner;
+  const { level, isOwner } = useUserPermissions();
+  const currentRole = levelToRole(level);
+  const canManage = canManageRoles(currentRole);
+  const isCurrentUserAdmin = canManage && !isOwnerRole(currentRole);
 
   useEffect(() => {
     fetchUsersWithRoles();
@@ -236,7 +239,7 @@ export default function RoleManagement() {
           <tr>
                     <th>User</th>
                     <th>Current Roles</th>
-                    <th style={{ width: '160px' }} className="text-end">Actions</th>
+                    {canManage && <th style={{ width: '160px' }} className="text-end">Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -264,39 +267,41 @@ export default function RoleManagement() {
                             {user.roles.map((role, index) => getRoleBadge(role, index))}
                           </td>
 
-                          <td className="text-end">
-                            <Dropdown>
-                              <Dropdown.Toggle variant="outline-secondary" size="sm" disabled={isCurrentUserAdmin && (user.roles || []).includes('owner')}>
-                                Actions
-                              </Dropdown.Toggle>
-                              <Dropdown.Menu align="end">
-                                <Dropdown.Item
-                                  onClick={() => {
-                                    // Compute allowed role options for current user
-                                    const allowedRoles = isOwner
-                                      ? ['verified_user', 'unverified_user', 'admin', 'owner']
-                                      : isCurrentUserAdmin
-                                        ? ['verified_user', 'unverified_user', 'guest']
-                                        : ['verified_user', 'unverified_user', 'admin', 'owner'];
+                          {canManage && (
+                            <td className="text-end">
+                              <Dropdown>
+                                <Dropdown.Toggle variant="outline-secondary" size="sm" disabled={isCurrentUserAdmin && (user.roles || []).includes('owner')}>
+                                  Actions
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu align="end">
+                                  <Dropdown.Item
+                                    onClick={() => {
+                                      // Compute allowed role options for current user
+                                      const allowedRoles = isOwner
+                                        ? ['verified_user', 'unverified_user', 'admin', 'owner']
+                                        : isCurrentUserAdmin
+                                          ? ['verified_user', 'unverified_user', 'guest']
+                                          : ['verified_user', 'unverified_user', 'admin', 'owner'];
 
-                                    // Derive a safe initial value
-                                    const currentRole = (user.roles && user.roles[0]) || 'unverified_user';
-                                    const initialRole = allowedRoles.includes(currentRole) ? currentRole : allowedRoles[0];
+                                      // Derive a safe initial value
+                                      const currentRoleForUser = (user.roles && user.roles[0]) || 'unverified_user';
+                                      const initialRole = allowedRoles.includes(currentRoleForUser) ? currentRoleForUser : allowedRoles[0];
 
-                                    setSelectedUser(user);
-                                    setNewRole(initialRole);
-                                    setShowRoleModal(true);
-                                  }}
-                                  disabled={user.isCurrentUser || (isCurrentUserAdmin && (user.roles || []).includes('owner'))}
-                                >
-                                  Change Role
-                                </Dropdown.Item>
-                                <Dropdown.Item disabled={true} className={user.isCurrentUser ? '' : 'd-none'}>
-                                  Current User
-                                </Dropdown.Item>
-                              </Dropdown.Menu>
-                            </Dropdown>
-                          </td>
+                                      setSelectedUser(user);
+                                      setNewRole(initialRole);
+                                      setShowRoleModal(true);
+                                    }}
+                                    disabled={user.isCurrentUser || (isCurrentUserAdmin && (user.roles || []).includes('owner'))}
+                                  >
+                                    Change Role
+                                  </Dropdown.Item>
+                                  <Dropdown.Item disabled={true} className={user.isCurrentUser ? '' : 'd-none'}>
+                                    Current User
+                                  </Dropdown.Item>
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </td>
+                          )}
               </tr>
             ))
           )}
