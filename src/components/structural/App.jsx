@@ -8,6 +8,7 @@ import { Spinner } from 'react-bootstrap';
 import Layout from './Layout.jsx';
 import AuthProvider from "../auth/AuthProvider.jsx";
 import ProtectedRoute from "../auth/ProtectedRoute.jsx";
+import AdminLayout from '../admin/AdminLayout.jsx'; // 导入 AdminLayout
 
 // Lazy load components for better code splitting
 const Home = lazy(() => import('../content/Home.jsx'));
@@ -18,10 +19,14 @@ const Login = lazy(() => import("../auth/Login"));
 const Logout = lazy(() => import("../auth/Logout"));
 const ForgotPassword = lazy(() => import("../auth/ForgotPassword"));
 const BlogPost = lazy(() => import("../blog/BlogPost.jsx"));
-const CreatePost = lazy(() => import("../admin/CreatePost.jsx"));
-const QuickSetup = lazy(() => import("../admin/QuickSetup.jsx"));
-const FirebaseTest = lazy(() => import("../admin/FirebaseTest.jsx"));
-const PostsDebug = lazy(() => import("../admin/PostsDebug.jsx"));
+const BlogEditor = lazy(() => import("../blog/BlogEditor.jsx"));
+
+// Admin components
+const Dashboard = lazy(() => import("../admin/Dashboard.jsx"));
+const PostManagement = lazy(() => import('../admin/PostManagement.jsx'));
+const PostsDebug = lazy(() => import('../admin/PostsDebug.jsx'));
+const RoleManagement = lazy(() => import('../admin/RoleManagement.jsx'));
+const SystemSetup = lazy(() => import("../admin/SystemSetup.jsx"));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -43,37 +48,22 @@ export default function App() {
                   <Route path="now" element={<Now />} />
 
                   {/* Blog routes */}
-                  <Route path="blog/:id" element={<BlogPost />} />
+                  <Route path="blog/:slug" element={<BlogPost />} />
+                  <Route path="editor/new" element={<BlogEditor />} />
+                  <Route path="editor/:id" element={<BlogEditor />} />
 
-                  {/* Admin routes */}
-                  <Route
-                    path="admin/create-post"
-                    element={
-                      <ProtectedRoute>
-                        <CreatePost />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="admin/setup"
-                    element={
-                      <ProtectedRoute>
-                        <QuickSetup />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="admin/test"
-                    element={
-                      <FirebaseTest />
-                    }
-                  />
-                  <Route
-                    path="admin/debug"
-                    element={
-                      <PostsDebug />
-                    }
-                  />
+                  {/* New Unified Admin Routes */}
+                  <Route 
+                    path="admin" 
+                    element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}
+                  >
+                    <Route index element={<Dashboard />} />
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="posts" element={<PostManagement />} />
+                    <Route path="debug" element={<PostsDebug />} />
+                    <Route path="roles" element={<RoleManagement />} />
+                    <Route path="setup" element={<SystemSetup />} />
+                  </Route>
 
                   {/* Auth routes */}
                   <Route path="register" element={<Register />} />

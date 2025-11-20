@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../../firebase/config.js";
+import { auth, db } from "../../firebase/config.js";
+import { doc, setDoc } from "firebase/firestore";
 import LoginStatusContext from "../contexts/LoginStatusContext";
+import { assignDefaultRole, updateRoleByVerificationStatus } from "../../services/roleService";
 import {
   login as doLogin,
   logout as doLogout,
@@ -30,9 +32,26 @@ export default function AuthProvider({ children }) {
             token: idToken,
             user: {
               email: firebaseUser.email,
-              nickname: firebaseUser.displayName || firebaseUser.email.split('@')[0]
+              nickname: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+              emailVerified: firebaseUser.emailVerified
             }
           });
+
+          // Auto-assign default role for new users and update verification status
+          // NOTE: Skip auto role assignment to avoid permission errors
+          // Roles should be managed through the admin setup process only
+          try {
+            // Only save user info, don't assign roles automatically
+            await setDoc(doc(db, 'userInfo', firebaseUser.uid), {
+              email: firebaseUser.email,
+              nickname: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+              lastLogin: new Date(),
+              emailVerified: firebaseUser.emailVerified
+            }, { merge: true });
+          } catch (userInfoError) {
+            console.warn('Could not save user info (this is okay during setup):', userInfoError);
+            // Don't block login for user info saving failure
+          }
         } catch (error) {
           console.error('Error getting token:', error);
           setAuth({ token: null, user: null });

@@ -1,22 +1,33 @@
 import { useState, useEffect } from 'react';
-import { Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Spinner, Alert, Button, ButtonGroup } from 'react-bootstrap';
+import { useSearchParams } from 'react-router';
 import EmailVerificationAlert from "../auth/EmailVerificationAlert";
 import AuthorCard from "../blog/AuthorCard";
 import BlogCard from "../blog/BlogCard";
+import { AdminGate } from "../auth/PermissionGates";
 import { getPosts } from "../../services/blogService";
+import { useUserPermissions } from "../../hooks/usePermissions";
 import '../../styles/blog-theme-links.css';
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [viewMode, setViewMode] = useState(searchParams.get('view') || 'published');
+  const { canAccessAdmin } = useUserPermissions();
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        console.log('Fetching posts...');
-        const fetchedPosts = await getPosts(6); // Get recent 6 posts
+        console.log('Fetching posts with view mode:', viewMode);
+        
+        const filterOptions = {
+          status: viewMode === 'all' ? 'all' : 'published-only'
+        };
+        
+        const fetchedPosts = await getPosts(12, filterOptions); // Get recent 12 posts
         console.log('Posts fetched successfully:', fetchedPosts);
         setPosts(fetchedPosts);
         setError(''); // Clear any previous errors
@@ -40,7 +51,18 @@ export default function Home() {
     };
 
     fetchPosts();
-  }, []);
+  }, [viewMode]);
+
+  // Update URL when view mode changes
+  const handleViewModeChange = (newViewMode) => {
+    setViewMode(newViewMode);
+    if (newViewMode === 'published') {
+      searchParams.delete('view');
+    } else {
+      searchParams.set('view', newViewMode);
+    }
+    setSearchParams(searchParams);
+  };
 
   // If no posts, show welcome message (development stage)
   const renderContent = () => {
@@ -62,6 +84,12 @@ export default function Home() {
     }
 
     if (posts.length === 0) {
+      const emptyMessage = viewMode === 'all' && canAccessAdmin 
+        ? 'No posts found (including drafts). Create your first post to get started!'
+        : viewMode === 'published'
+        ? 'No published posts yet. Stay tuned for upcoming content!'
+        : 'No posts available at the moment.';
+
       return (
         <div className="py-5">
           <div className="text-center mb-4">
@@ -74,27 +102,44 @@ export default function Home() {
               Stories from the road, lessons from code, and everything in between.
             </p>
             
-            {/* Current status notice */}
-            <div className="alert alert-info border-0" style={{ backgroundColor: 'rgba(13, 202, 240, 0.1)' }}>
-              <i className="bi bi-info-circle me-2"></i>
-              <strong>Blog is launching soon!</strong> Currently setting up the platform and preparing the first posts.
+            {/* Dynamic status notice based on view mode */}
+            <div className={`alert border-0 ${canAccessAdmin ? 'alert-warning' : 'alert-info'}`} 
+                 style={{ backgroundColor: canAccessAdmin ? 'rgba(255, 193, 7, 0.1)' : 'rgba(13, 202, 240, 0.1)' }}>
+              <i className={`bi ${canAccessAdmin ? 'bi-exclamation-triangle' : 'bi-info-circle'} me-2`}></i>
+              <strong>{emptyMessage}</strong>
+              {canAccessAdmin && (
+                <div className="mt-2">
+                  <Button 
+                    variant="outline-primary" 
+                    size="sm" 
+                    onClick={() => window.location.href = '#/admin/create-post'}
+                  >
+                    Create First Post
+                  </Button>
+                </div>
+              )}
             </div>
-            
-            {/* Link system demo */}
-            <div className="mt-4 p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
-              <h6 className="text-muted mb-3">✨ Link Style Preview:</h6>
-              <div style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
-                <p className="mb-2">
-                  Sample story: I <a href="#" className="theme-link link-blue">raised funding</a> for my startup, 
-                  then <a href="#" className="theme-link link-teal">walked</a> across the continent, 
-                  <a href="#" className="theme-link link-red">lived in South America</a> for months, 
-                  and <a href="#" className="theme-link link-brown">became employee #1</a> at a YC company.
-                </p>
-                <small className="text-muted">
-                  Hover over the colored links to see the "marker highlight" effect! 🖍️
-                </small>
-              </div>
-            </div>
+
+            {/* Show link preview only for non-admin empty state */}
+            {!canAccessAdmin && (
+              <>
+                {/* Link system demo */}
+                <div className="mt-4 p-3 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
+                  <h6 className="text-muted mb-3">✨ Link Style Preview:</h6>
+                  <div style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
+                    <p className="mb-2">
+                      Sample story: I <a href="#" className="theme-link link-blue">raised funding</a> for my startup, 
+                      then <a href="#" className="theme-link link-teal">walked</a> across the continent, 
+                      <a href="#" className="theme-link link-red">lived in South America</a> for months, 
+                      and <a href="#" className="theme-link link-brown">became employee #1</a> at a YC company.
+                    </p>
+                    <small className="text-muted">
+                      Hover over the colored links to see the "marker highlight" effect! 🖍️
+                    </small>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           
           {/* Preview cards */}
@@ -165,6 +210,27 @@ export default function Home() {
 
         {/* Right side: Blog content */}
         <Col lg={8} xl={9}>
+          {/* Admin view toggle */}
+          <AdminGate>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h4 className="mb-0">Blog Posts</h4>
+              <ButtonGroup size="sm">
+                <Button
+                  variant={viewMode === 'published' ? 'primary' : 'outline-primary'}
+                  onClick={() => handleViewModeChange('published')}
+                >
+                  Published
+                </Button>
+                <Button
+                  variant={viewMode === 'all' ? 'primary' : 'outline-primary'}
+                  onClick={() => handleViewModeChange('all')}
+                >
+                  All
+                </Button>
+              </ButtonGroup>
+            </div>
+          </AdminGate>
+          
           {renderContent()}
         </Col>
       </Row>

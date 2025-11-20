@@ -1,16 +1,27 @@
-import { Card, Badge } from 'react-bootstrap';
+import { Card, Badge, Button, Toast } from 'react-bootstrap';
 import { Link } from 'react-router';
 import { formatDistanceToNow } from 'date-fns';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
+import LoginStatusContext from '../contexts/LoginStatusContext';
+import { auth } from '../../firebase/config';
+import { toggleLike } from '../../services/likeService';
 import ThemeContext from '../contexts/ThemeContext';
 import '../../styles/blog-theme-links.css';
 
 export default function BlogCard({ post, theme = 'blue' }) {
   const { theme: currentTheme } = useContext(ThemeContext);
+  const { isLoggedIn } = useContext(LoginStatusContext);
   const isDark = currentTheme === 'dark';
+  
+  // State for like functionality and toast
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [localPost, setLocalPost] = useState(post);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   
   const {
     id,
+    slug,
     title,
     subtitle,
     excerpt,
@@ -20,7 +31,42 @@ export default function BlogCard({ post, theme = 'blue' }) {
     publishedAt,
     readTime,
     author
-  } = post;
+  } = localPost;
+
+  // Handle like functionality
+  const handleLike = async (e) => {
+    e.preventDefault(); // Prevent navigation when clicking the like button
+    e.stopPropagation();
+    
+    console.log('🔍 BlogCard handleLike called, isLoggedIn:', isLoggedIn);
+    if (!isLoggedIn) {
+      console.log('🚫 User not logged in, showing toast');
+      setToastMessage('😊 请先注册并登录才能点赞文章！只有注册用户才能表达对文章的喜爱。');
+      setShowToast(true);
+      return;
+    }
+
+    try {
+      setLikeLoading(true);
+      const result = await toggleLike(localPost.id, auth.currentUser?.uid);
+      
+      // Update local state
+      setLocalPost(prev => ({
+        ...prev,
+        userHasLiked: result.liked,
+        likeCount: result.total
+      }));
+
+      setToastMessage(result.message);
+      setShowToast(true);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      setToastMessage('点赞操作失败，请稍后再试');
+      setShowToast(true);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
   // Format date display
   const formatDate = (date) => {
@@ -95,14 +141,11 @@ export default function BlogCard({ post, theme = 'blue' }) {
           <div className={`card-date`}>
             {formatDate(publishedAt)}
           </div>
-          {readTime && (
-            <small className="text-muted">{readTime} min read</small>
-          )}
         </div>
 
         {/* Title and subtitle */}
         <Link 
-          to={`/blog/${id}`} 
+          to={`/blog/${slug || id}`} 
           className="text-decoration-none text-reset"
         >
           <Card.Title 
@@ -139,33 +182,75 @@ export default function BlogCard({ post, theme = 'blue' }) {
           {excerpt}
         </Card.Text>
 
-        {/* Tags */}
-        {tags.length > 0 && (
-          <div className="mt-auto pt-2">
-            <div className="d-flex flex-wrap gap-1">
-              {tags.slice(0, 3).map((tag, index) => (
-                <Badge 
-                  key={index}
-                  variant="outline-secondary"
-                  className="border-0"
-                  style={tagStyle}
-                >
-                  {tag}
-                </Badge>
-              ))}
-              {tags.length > 3 && (
-                <Badge 
-                  variant="outline-secondary"
-                  className="border-0"
-                  style={tagStyle}
-                >
-                  +{tags.length - 3}
-                </Badge>
-              )}
+        {/* Tags and interactions */}
+        <div className="mt-auto pt-2">
+          {/* Tags */}
+          {tags.length > 0 && (
+            <div className="mb-2">
+              <div className="d-flex flex-wrap gap-1">
+                {tags.slice(0, 3).map((tag, index) => (
+                  <Badge 
+                    key={index}
+                    variant="outline-secondary"
+                    className="border-0"
+                    style={tagStyle}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+                {tags.length > 3 && (
+                  <Badge 
+                    variant="outline-secondary"
+                    className="border-0"
+                    style={tagStyle}
+                  >
+                    +{tags.length - 3}
+                  </Badge>
+                )}
+              </div>
             </div>
+          )}
+          
+          {/* Like button */}
+          <div className="d-flex justify-content-between align-items-center">
+            <Button 
+              variant={localPost.userHasLiked ? "primary" : "outline-primary"} 
+              size="sm"
+              onClick={handleLike}
+              disabled={likeLoading}
+              title={!isLoggedIn ? "请先登录才能点赞" : "点赞这篇文章"}
+              style={{ 
+                fontSize: '0.8rem',
+                ...((!isLoggedIn) ? { opacity: 0.7 } : {})
+              }}
+            >
+              <i className={`bi ${localPost.userHasLiked ? 'bi-heart-fill' : 'bi-heart'} me-1`}></i>
+              {likeLoading ? 'Loading...' : `Like${localPost.likeCount > 0 ? ` (${localPost.likeCount})` : ''}`}
+            </Button>
+            
+            {readTime && (
+              <small className="text-muted">{readTime} min read</small>
+            )}
           </div>
-        )}
+        </div>
       </Card.Body>
+      
+      {/* Toast for notifications */}
+      <Toast 
+        show={showToast} 
+        onClose={() => setShowToast(false)}
+        delay={3000}
+        autohide
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 9999,
+          maxWidth: '350px'
+        }}
+      >
+        <Toast.Body>{toastMessage}</Toast.Body>
+      </Toast>
     </Card>
   );
 }

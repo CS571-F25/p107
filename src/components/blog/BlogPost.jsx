@@ -1,37 +1,172 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Container, Row, Col, Spinner, Alert, Badge, Button } from 'react-bootstrap';
-import { getPost } from '../../services/blogService';
+import { Container, Row, Col, Spinner, Alert, Badge, Button, Modal, Toast, ToastContainer } from 'react-bootstrap';
+import { getPostBySlug } from '../../services/blogService';
+import { toggleLike } from '../../services/likeService';
+import { usePostPermissions } from '../../hooks/usePermissions';
+import { PermissionGate } from '../auth/PermissionGates';
+import { auth } from '../../firebase/config';
 import AuthorCard from './AuthorCard';
 import ThemeContext from '../contexts/ThemeContext';
+import LoginStatusContext from '../contexts/LoginStatusContext';
 
 export default function BlogPost() {
-  const { id } = useParams();
+  const { slug } = useParams(); // Using slug instead of id
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const { theme } = useContext(ThemeContext);
+  const { isLoggedIn } = useContext(LoginStatusContext);
   const isDark = theme === 'dark';
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
         setLoading(true);
-        const fetchedPost = await getPost(id);
+        const fetchedPost = await getPostBySlug(slug);
         setPost(fetchedPost);
+        
+        // Update page title and meta tags
+        updatePageMeta(fetchedPost);
       } catch (err) {
         console.error('Error fetching post:', err);
-        setError('Post not found or failed to load.');
+        setError(err.message || 'Post not found or failed to load.');
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) {
+    if (slug) {
       fetchPost();
     }
-  }, [id]);
+  }, [slug]);
+
+  const updatePageMeta = (postData) => {
+    // Update page title
+    document.title = `${postData.title} - Orient Way`;
+    
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', postData.excerpt || postData.title);
+    }
+
+    // Update Open Graph tags
+    updateOGTags(postData);
+  };
+
+  const updateOGTags = (postData) => {
+    const baseUrl = window.location.origin;
+    const postUrl = `${baseUrl}/blog/${postData.slug}`;
+    
+    // Helper function to update or create meta tag
+    const updateMetaTag = (property, content) => {
+      let meta = document.querySelector(`meta[property="${property}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('property', property);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', content);
+    };
+
+    // Update OG tags
+    updateMetaTag('og:title', postData.title);
+    updateMetaTag('og:description', postData.excerpt || postData.title);
+    updateMetaTag('og:url', postUrl);
+    updateMetaTag('og:type', 'article');
+    
+    if (postData.coverImage) {
+      updateMetaTag('og:image', postData.coverImage);
+    }
+    
+    // Article-specific tags
+    updateMetaTag('article:published_time', postData.publishedAt?.toISOString());
+    updateMetaTag('article:author', postData.author || 'Orient Way');
+    
+    if (postData.tags && postData.tags.length > 0) {
+      postData.tags.forEach(tag => {
+        const tagMeta = document.createElement('meta');
+        tagMeta.setAttribute('property', 'article:tag');
+        tagMeta.setAttribute('content', tag);
+        document.head.appendChild(tagMeta);
+      });
+    }
+
+    // Twitter Card tags
+    updateMetaTag('twitter:card', 'summary_large_image');
+    updateMetaTag('twitter:title', postData.title);
+    updateMetaTag('twitter:description', postData.excerpt || postData.title);
+    if (postData.coverImage) {
+      updateMetaTag('twitter:image', postData.coverImage);
+    }
+  };
+
+  const handleLike = async () => {
+    console.log('🔍 handleLike called, isLoggedIn:', isLoggedIn);
+    if (!isLoggedIn) {
+      console.log('🚫 User not logged in, showing toast');
+      setToastMessage('😊 请先注册并登录才能点赞文章！只有注册用户才能表达对文章的喜爱。');
+      setShowToast(true);
+      return;
+    }
+
+    try {
+      setLikeLoading(true);
+      const result = await toggleLike(post.id, auth.currentUser?.uid); // Pass current user's ID
+      
+      // Update local state
+      setPost(prev => ({
+        ...prev,
+        userHasLiked: result.liked,
+        likeCount: result.total
+      }));
+
+      setToastMessage(result.message);
+      setShowToast(true);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      setToastMessage('点赞操作失败，请稍后再试');
+      setShowToast(true);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  const handleShare = (platform) => {
+    const postUrl = window.location.href;
+    const title = post.title;
+    const text = post.excerpt || title;
+
+    let shareUrl = '';
+    
+    switch (platform) {
+      case 'x':
+        shareUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(postUrl)}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`;
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(postUrl);
+        setToastMessage('Link copied to clipboard!');
+        setShowToast(true);
+        setShowShareModal(false);
+        return;
+      default:
+        return;
+    }
+
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'width=600,height=400');
+      setShowShareModal(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -300,18 +435,121 @@ export default function BlogPost() {
 
             {/* Interaction buttons */}
             <div className="d-flex gap-3 py-3 border-top" style={borderStyle}>
-              <Button variant="outline-primary" size="sm">
-                <i className="bi bi-heart me-1"></i>
-                Like {post.likes > 0 && `(${post.likes})`}
+              <Button 
+                variant={post.userHasLiked ? "primary" : "outline-primary"} 
+                size="sm"
+                onClick={handleLike}
+                disabled={likeLoading}
+                title={!isLoggedIn ? "请先登录才能点赞" : "点赞这篇文章"}
+                style={!isLoggedIn ? { opacity: 0.7 } : {}}
+              >
+                <i className={`bi ${post.userHasLiked ? 'bi-heart-fill' : 'bi-heart'} me-1`}></i>
+                {likeLoading ? 'Loading...' : `Like${post.likeCount > 0 ? ` (${post.likeCount})` : ''}`}
               </Button>
-              <Button variant="outline-secondary" size="sm">
+              
+              <Button 
+                variant="outline-secondary" 
+                size="sm"
+                onClick={() => setShowShareModal(true)}
+              >
                 <i className="bi bi-share me-1"></i>
                 Share
               </Button>
+
+              {/* Post management buttons for authorized users */}
+              <PermissionGate permission="blog:write-own">
+                {post.authorId === auth.currentUser?.uid && (
+                  <Button 
+                    variant="outline-info" 
+                    size="sm"
+                    onClick={() => navigate(`/editor/${post.id}`)}
+                  >
+                    <i className="bi bi-pencil me-1"></i>
+                    Edit
+                  </Button>
+                )}
+              </PermissionGate>
+
+              <PermissionGate permission="blog:publish-all">
+                <Button 
+                  variant={post.status === 'published' ? "outline-warning" : "outline-success"} 
+                  size="sm"
+                  onClick={() => {
+                    if (post.status === 'published') {
+                      // Unpublish
+                      console.log('Unpublish post');
+                    } else {
+                      // Publish
+                      console.log('Publish post');
+                    }
+                  }}
+                >
+                  <i className={`bi ${post.status === 'published' ? 'bi-eye-slash' : 'bi-eye'} me-1`}></i>
+                  {post.status === 'published' ? 'Unpublish' : 'Publish'}
+                </Button>
+              </PermissionGate>
             </div>
           </article>
         </Col>
       </Row>
+
+      {/* Share Modal */}
+      <Modal show={showShareModal} onHide={() => setShowShareModal(false)} centered>
+        <Modal.Header closeButton style={{ 
+          backgroundColor: isDark ? '#2d3748' : '#fff',
+          borderColor: isDark ? '#4a5568' : '#dee2e6'
+        }}>
+          <Modal.Title style={{ color: isDark ? '#f7fafc' : '#1a202c' }}>
+            Share this post
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ 
+          backgroundColor: isDark ? '#2d3748' : '#fff',
+          color: isDark ? '#f7fafc' : '#1a202c'
+        }}>
+          <div className="d-grid gap-2">
+            <Button 
+              variant="outline-primary" 
+              onClick={() => handleShare('x')}
+              className="d-flex align-items-center justify-content-start"
+            >
+              <i className="bi bi-twitter-x me-2"></i>
+              Share on X
+            </Button>
+            <Button 
+              variant="outline-primary" 
+              onClick={() => handleShare('linkedin')}
+              className="d-flex align-items-center justify-content-start"
+            >
+              <i className="bi bi-linkedin me-2"></i>
+              Share on LinkedIn
+            </Button>
+            <Button 
+              variant="outline-secondary" 
+              onClick={() => handleShare('copy')}
+              className="d-flex align-items-center justify-content-start"
+            >
+              <i className="bi bi-clipboard me-2"></i>
+              Copy link
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* Toast notifications */}
+      <ToastContainer position="top-end" className="p-3">
+        <Toast 
+          show={showToast} 
+          onClose={() => setShowToast(false)} 
+          delay={3000} 
+          autohide
+          bg={isDark ? 'dark' : 'light'}
+        >
+          <Toast.Body style={{ color: isDark ? '#f7fafc' : '#1a202c' }}>
+            {toastMessage}
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
     </Container>
   );
 }

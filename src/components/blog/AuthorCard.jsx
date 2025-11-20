@@ -69,7 +69,7 @@ export default function AuthorCard() {
               whiteSpace: 'nowrap'
             }}
           >
-            to orient: find your bearings · a way: a path you make
+            find direction and move on
           </small>
         </div>
       </div>
