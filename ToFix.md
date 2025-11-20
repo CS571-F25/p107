@@ -7,3 +7,7 @@
 #/admin/roles 参照其样式对
 
 Post Management 和 Role Management 的结构其实非常相似,可以使用非常相似的样式以提高访问体验。一保持位置和样式一致，这样页面直接切换时用户更舒服。
+
+git checkout main
+git merge feature/passport-map
+git push

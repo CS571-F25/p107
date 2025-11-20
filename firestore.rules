@@ -10,49 +10,46 @@ service cloud.firestore {
       return request.auth.uid;
     }
     
-    // Check if user has specific role by querying userRoles collection
     function hasRole(userId, roleId) {
       return exists(/databases/$(database)/documents/userRoles/$(userId)) &&
              get(/databases/$(database)/documents/userRoles/$(userId)).data.roleId == roleId;
     }
     
-    // Simplified role checks - allow any authenticated user during setup phase
     function isOwnerSimple(userId) {
-      return isAuthenticated(); // Temporarily allow all for setup
+      return isAuthenticated(); // 暂时的占位实现
     }
     
     function isAdminSimple(userId) {
-      return isAuthenticated(); // Temporarily allow all for setup
+      return isAuthenticated(); // 暂时的占位实现
     }
     
-    // Roles collection - allow read/write for setup
     match /roles/{roleId} {
       allow read, write: if isAuthenticated();
     }
     
-    // User roles collection - allow read/write for setup
     match /userRoles/{userRoleId} {
       allow read, write: if isAuthenticated();
     }
     
-    // User info collection - allow read/write for setup
     match /userInfo/{userId} {
       allow read, write: if isAuthenticated();
     }
+
+    match /mapPoints/{pointId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
     
-    // Posts collection - allow public read for published posts
     match /posts/{postId} {
-      allow read: if true; // Anyone can read posts (blog is public)
-      allow write: if isAuthenticated(); // Only authenticated users can write
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
     
-    // Likes collection - allow public read for like counts, auth required for write
     match /likes/{likeId} {
-      allow read: if true; // Anyone can read like counts
-      allow write: if isAuthenticated(); // Only authenticated users can like
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
     
-    // Audit logs
     match /auditLogs/{logId} {
       allow read, write: if isAuthenticated();
     }

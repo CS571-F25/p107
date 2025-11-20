@@ -1,0 +1,1 @@
+import{j as o}from"./vendor-bootstrap-C6xIMti8.js";import{L as s}from"./vendor-router-DArSVHJ3.js";import"./vendor-react-Bzgz95E1.js";function e(){return o.jsxs("div",{style:{padding:8},children:[o.jsx("h2",{children:"That's a 404."}),o.jsx("p",{children:"Uh oh, looks like you're lost!"}),o.jsx("p",{children:o.jsx(s,{to:"/",children:"Back to safety."})})]})}export{e as default};

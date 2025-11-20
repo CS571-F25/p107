@@ -20,6 +20,7 @@ const Logout = lazy(() => import("../auth/Logout"));
 const ForgotPassword = lazy(() => import("../auth/ForgotPassword"));
 const BlogPost = lazy(() => import("../blog/BlogPost.jsx"));
 const BlogEditor = lazy(() => import("../blog/BlogEditor.jsx"));
+const PassportMap = lazy(() => import('../PassportMap.jsx'));
 
 // Admin components
 const PostManagement = lazy(() => import("../admin/PostManagement.jsx"));
@@ -44,6 +45,7 @@ export default function App() {
                 <Route path="/" element={<Layout />}> 
                   <Route index element={<Home />} />
                   <Route path="now" element={<Now />} />
+                  <Route path="passport" element={<PassportMap />} />
 
                   {/* Blog routes */}
                   <Route path="blog/:slug" element={<BlogPost />} />

@@ -88,6 +88,7 @@ export default function Layout() {
                 <Nav className="me-auto align-items-center">
                     <Nav.Link as={Link} to="/">Home</Nav.Link>
                     <Nav.Link as={Link} to="/now">Now</Nav.Link>
+                    <Nav.Link as={Link} to="/passport">Passport</Nav.Link>
                     <NavDropdown title="Involve">
                         {auth?.isLoggedIn ? (
                             <NavDropdown.Item as={Link} to="/logout">Logout</NavDropdown.Item>
