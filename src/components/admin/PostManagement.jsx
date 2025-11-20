@@ -1,4 +1,4 @@
-// Admin dashboard for blog management
+// Admin post management
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router';
 import {
@@ -16,19 +16,19 @@ import {
   ButtonGroup,
   Pagination
 } from 'react-bootstrap';
-import { 
-  getPosts, 
-  publishPost, 
-  unpublishPost, 
+import {
+  getPosts,
+  publishPost,
+  unpublishPost,
   deletePost,
-  POST_STATUS 
+  POST_STATUS
 } from '../../services/blogService';
 import { withAdminAccess } from '../auth/PermissionGates';
 import { useUserPermissions } from '../../hooks/usePermissions';
 import { refreshUserPermissions } from '../../services/permissionUtils';
 import ThemeContext from '../contexts/ThemeContext';
 
-function Dashboard() {
+function PostManagement() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -199,10 +199,7 @@ function Dashboard() {
     return <Badge bg={variants[status] || 'secondary'}>{status}</Badge>;
   };
 
-  const cardStyle = {
-    backgroundColor: isDark ? '#2d3748' : '#fff',
-    borderColor: isDark ? '#4a5568' : '#dee2e6'
-  };
+  const cardStyle = {};
 
   return (
     <Container fluid style={{ maxWidth: '1400px', padding: '2rem 1rem' }}>
@@ -210,8 +207,8 @@ function Dashboard() {
         <Col>
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              <h2 className="mb-1">Blog Dashboard</h2>
-              <p className="text-muted mb-0">Manage your blog posts and content</p>
+              <h2 className="mb-1">Post Management</h2>
+              <p className="text-muted mb-0">Manage your posts and content</p>
             </div>
             <Button 
               variant="primary"
@@ -474,4 +471,4 @@ function Dashboard() {
   );
 }
 
-export default withAdminAccess(Dashboard);
+export default withAdminAccess(PostManagement);

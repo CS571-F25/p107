@@ -1,6 +1,6 @@
 // Role Management Component - Only for Owner
 import { useState, useEffect } from 'react';
-import { Table, Button, Form, Alert, Modal, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Button, Form, Alert, Modal, Badge, Dropdown } from 'react-bootstrap';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
 import { assignRoleExclusive, getUserRoles, cleanupDuplicateRoles } from '../../services/roleService';
@@ -132,89 +132,166 @@ export default function RoleManagement() {
     return <div className="text-center p-4">Loading users...</div>;
   }
 
-  return (
-    <div>
-      {error && <Alert variant="danger">{error}</Alert>}
-      {success && <Alert variant="success">{success}</Alert>}
-      
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5>User Role Management</h5>
-        <div>
-          <Button 
-            variant="outline-warning" 
-            size="sm" 
-            onClick={handleCleanupRoles}
-            disabled={cleaning}
-            className="me-2"
-          >
-            {cleaning ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-1" />
-                Cleaning...
-              </>
-            ) : (
-              <>
-                <i className="bi bi-arrow-clockwise me-1"></i>
-                Cleanup Roles
-              </>
-            )}
-          </Button>
-          <small className="text-muted">
-            Only Owner can change user roles • Every user must have exactly one role
-          </small>
-        </div>
-      </div>
+  const cardStyle = {};
 
-      <Table striped bordered hover responsive>
+  return (
+    <Container fluid style={{ maxWidth: '1400px', padding: '2rem 1rem' }}>
+      {error && (
+        <Alert variant="danger" onClose={() => setError('')} dismissible>
+          {error}
+        </Alert>
+      )}
+
+      {success && (
+        <Alert variant="success" onClose={() => setSuccess('')} dismissible>
+          {success}
+        </Alert>
+      )}
+
+      <Row className="mb-4">
+        <Col>
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h2 className="mb-1">Role Management</h2>
+              <p className="text-muted mb-0">Manage user roles and related actions</p>
+            </div>
+            <Button 
+              variant="primary"
+              onClick={handleCleanupRoles}
+              disabled={cleaning}
+            >
+              {cleaning ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-1" />
+                  Cleaning...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-arrow-clockwise me-2"></i>
+                  Cleanup Roles
+                </>
+              )}
+            </Button>
+          </div>
+        </Col>
+      </Row>
+
+      <Row className="mb-4">
+        <Col>
+          <Card style={cardStyle}>
+            <Card.Body>
+              <Row className="g-3">
+                <Col md={3}>
+                  <Form.Select
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === 'all') {
+                        fetchUsersWithRoles();
+                      } else {
+                        setUsers(prev => prev.filter(u => (u.roles || []).includes(val)));
+                      }
+                    }}
+                    defaultValue="all"
+                  >
+                    <option value="all">All Roles</option>
+                    <option value="owner">Owner</option>
+                    <option value="admin">Admin</option>
+                    <option value="verified_user">Verified User</option>
+                    <option value="unverified_user">Unverified User</option>
+                    <option value="guest">Guest</option>
+                  </Form.Select>
+                </Col>
+
+                <Col md={3}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search by email"
+                    onChange={(e) => {
+                      const q = e.target.value.trim().toLowerCase();
+                      if (!q) {
+                        fetchUsersWithRoles();
+                        return;
+                      }
+                      setUsers(prev => prev.filter(u => (u.email || '').toLowerCase().includes(q)));
+                    }}
+                  />
+                </Col>
+
+                <Col md={6} />
+              </Row>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      <Row>
+        <Col>
+          <Card style={cardStyle}>
+            <Card.Body>
+              <Table responsive hover className="mb-0">
         <thead>
           <tr>
-            <th>User</th>
-            <th>Current Roles</th>
-            <th>Actions</th>
+                    <th>User</th>
+                    <th>Current Roles</th>
+                    <th style={{ width: '160px' }} className="text-end">Actions</th>
           </tr>
         </thead>
         <tbody>
           {users.length === 0 ? (
             <tr>
-              <td colSpan="3" className="text-center text-muted">
-                No users with roles found
-              </td>
+                        <td colSpan="3" className="text-center text-muted">
+                          No users with roles found
+                        </td>
             </tr>
           ) : (
             users.map(user => (
               <tr key={user.id}>
-                <td>
-                  <div>
-                    <strong>{user.email}</strong>
-                    {user.nickname && user.nickname !== user.email?.split('@')[0] && (
-                      <div><small className="text-muted">({user.nickname})</small></div>
-                    )}
-                    <div><small className="text-muted font-monospace">ID: {user.id}</small></div>
-                  </div>
-                  {user.isCurrentUser && <Badge bg="primary" className="ms-2">You</Badge>}
-                </td>
-                <td>
-                  {user.roles.map((role, index) => getRoleBadge(role, index))}
-                </td>
-                <td>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setNewRole(user.roles[0] || 'unverified_user');
-                      setShowRoleModal(true);
-                    }}
-                    disabled={user.isCurrentUser}
-                  >
-                    {user.isCurrentUser ? 'Current User' : 'Change Role'}
-                  </Button>
-                </td>
+                          <td>
+                            <div>
+                              <strong>{user.email}</strong>
+                              {user.nickname && user.nickname !== user.email?.split('@')[0] && (
+                                <div><small className="text-muted">({user.nickname})</small></div>
+                              )}
+                              <div><small className="text-muted font-monospace">ID: {user.id}</small></div>
+                            </div>
+                            {user.isCurrentUser && <Badge bg="primary" className="ms-2">You</Badge>}
+                          </td>
+
+                          <td>
+                            {user.roles.map((role, index) => getRoleBadge(role, index))}
+                          </td>
+
+                          <td className="text-end">
+                            <Dropdown>
+                              <Dropdown.Toggle variant="outline-secondary" size="sm">
+                                Actions
+                              </Dropdown.Toggle>
+                              <Dropdown.Menu align="end">
+                                <Dropdown.Item
+                                  onClick={() => {
+                                    setSelectedUser(user);
+                                    setNewRole(user.roles[0] || 'unverified_user');
+                                    setShowRoleModal(true);
+                                  }}
+                                  disabled={user.isCurrentUser}
+                                >
+                                  Change Role
+                                </Dropdown.Item>
+                                <Dropdown.Item disabled={true} className={user.isCurrentUser ? '' : 'd-none'}>
+                                  Current User
+                                </Dropdown.Item>
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </td>
               </tr>
             ))
           )}
         </tbody>
-      </Table>
+              </Table>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
       {/* Role Change Modal */}
       <Modal show={showRoleModal} onHide={() => setShowRoleModal(false)}>
@@ -251,6 +328,6 @@ export default function RoleManagement() {
           </Button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </Container>
   );
 }
