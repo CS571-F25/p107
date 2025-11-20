@@ -3,5 +3,6 @@
 3. [1/5] Admin/Setup - UI 简单错误。暂时不需要修改。
 4. [1/5] Blog 1 min read 估算方式检查。暂时不需要修改。
 #/editor/new 下没有author选项，新建的post不会有author，在#/admin/dashboard 中对应post 的 author下显示Unknown， 不便于在这里使用Filter by Author。建议的修复是：因为在post页面暂时没有author展示，所以可以考虑暂时使用Role Management中显示的User（注册邮箱）来确定，以前已有的文章全部改为unknown作为保护选项，未来的都是在创建时根据登录状态自动填入。在edit状态下可以编辑修改具体内容，方便对错误或者之前的历史unknown进行修改。
-#/admin/dashboard 实现很不错，但和#/admin/posts重复，目前看#/admin/posts无法正确显示created时间 且功能于#/admin/dashboard实现。建议的修复是：剥离删除#/admin/posts，在此之后修改#/admin/dashboard的路由，改成#/admin/posts，不再保留#/admin/dashboard。
+#/admin 中左侧Admin Panel还保留了 已经删掉的 Dashboard，建议的修复是删除。另外Admin Panel底色是灰色的，标题颜色会随黑夜/白天模式变化，目前看白天模式效果不错，但是黑夜模式下这个接近白色的底色显得非常突兀，建议的修复是调整黑夜模式下的底色，以保证标题及跳转连接文字显眼的情况下Admin Panel背景和页面背景接近不突兀。注意，Admin Panel这个部件除了出现在#/admin，在#/admin/posts和#/admin/roles以及#/admin/setup都有出现，修改需要维持一致。
+
 #/admin/roles 参照其样式对
