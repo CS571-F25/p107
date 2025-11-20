@@ -4,7 +4,7 @@ import { Container, Row, Col, Card, Tab, Tabs, Alert } from 'react-bootstrap';
 import { useUserPermissions } from '../../hooks/usePermissions';
 import ThemeContext from '../contexts/ThemeContext';
 import LoginStatusContext from '../contexts/LoginStatusContext';
-import PostManagement from './PostManagement';
+import Dashboard from './Dashboard';
 import RoleManagement from './RoleManagement';
 import PermissionDebugger from './PermissionDebugger';
 
@@ -75,7 +75,7 @@ export default function SimpleDashboard() {
                 className="mb-3"
               >
                 <Tab eventKey="posts" title="Article Management">
-                  <PostManagement />
+                  <Dashboard />
                 </Tab>
                 
                 {isOwner && (

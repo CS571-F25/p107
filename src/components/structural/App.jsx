@@ -23,7 +23,6 @@ const BlogEditor = lazy(() => import("../blog/BlogEditor.jsx"));
 
 // Admin components
 const Dashboard = lazy(() => import("../admin/Dashboard.jsx"));
-const PostManagement = lazy(() => import('../admin/PostManagement.jsx'));
 const RoleManagement = lazy(() => import('../admin/RoleManagement.jsx'));
 const SystemSetup = lazy(() => import("../admin/SystemSetup.jsx"));
 
@@ -57,8 +56,7 @@ export default function App() {
                     element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}
                   >
                     <Route index element={<Dashboard />} />
-                    <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="posts" element={<PostManagement />} />
+                    <Route path="posts" element={<Dashboard />} />
                     <Route path="roles" element={<RoleManagement />} />
                     <Route path="setup" element={<SystemSetup />} />
                   </Route>
