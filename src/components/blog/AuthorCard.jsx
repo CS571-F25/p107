@@ -81,13 +81,9 @@ export default function AuthorCard() {
             <li key={index} className="mb-1">
               <span className="text-muted">• </span>
               <a
-                href={`#${item.id}`}
+                href="javascript:void(0);"
                 className={item.linkClass}
-                onClick={(e) => {
-                  e.preventDefault();
-                  console.log(`Would navigate to: ${item.id}`);
-                  alert(`This would be a link to a blog post about: ${item.text}`);
-                }}
+                onClick={(e) => e.preventDefault()}
               >
                 {item.text}
               </a>
