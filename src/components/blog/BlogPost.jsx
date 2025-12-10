@@ -6,7 +6,7 @@ import { toggleLike } from '../../services/likeService';
 import { usePostPermissions } from '../../hooks/usePermissions';
 import { PermissionGate } from '../auth/PermissionGates';
 import { auth } from '../../firebase/config';
-import AuthorCard from './AuthorCard';
+import TableOfContents from './TableOfContents';
 import ThemeContext from '../contexts/ThemeContext';
 import LoginStatusContext from '../contexts/LoginStatusContext';
 
@@ -211,41 +211,56 @@ export default function BlogPost() {
     const processedLines = lines.map((line, index) => {
       // Headers
       if (line.startsWith('# ')) {
+        const headingText = line.substring(2);
+        const headingId = headingText
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/\s+/g, '-');
         return (
-          <h2 key={index} style={{ 
+          <h2 key={index} id={headingId} style={{ 
             fontSize: '1.75rem', 
             fontWeight: '700', 
             marginTop: index > 0 ? '2rem' : '0',
             marginBottom: '1rem',
             color: isDark ? '#f8f9fa' : '#212529'
           }}>
-            {line.substring(2)}
+            {headingText}
           </h2>
         );
       }
       if (line.startsWith('## ')) {
+        const headingText = line.substring(3);
+        const headingId = headingText
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/\s+/g, '-');
         return (
-          <h3 key={index} style={{ 
+          <h3 key={index} id={headingId} style={{ 
             fontSize: '1.5rem', 
             fontWeight: '600', 
             marginTop: '1.5rem',
             marginBottom: '0.75rem',
             color: isDark ? '#f8f9fa' : '#212529'
           }}>
-            {line.substring(3)}
+            {headingText}
           </h3>
         );
       }
       if (line.startsWith('### ')) {
+        const headingText = line.substring(4);
+        const headingId = headingText
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/\s+/g, '-');
         return (
-          <h4 key={index} style={{ 
+          <h4 key={index} id={headingId} style={{ 
             fontSize: '1.25rem', 
             fontWeight: '600', 
             marginTop: '1.25rem',
             marginBottom: '0.5rem',
             color: isDark ? '#f8f9fa' : '#212529'
           }}>
-            {line.substring(4)}
+            {headingText}
           </h4>
         );
       }
@@ -341,26 +356,13 @@ export default function BlogPost() {
   return (
     <Container fluid style={{ maxWidth: '1200px', padding: '1rem' }}>
       <Row className="g-4">
-        {/* Left sidebar: Author info card */}
+        {/* Left sidebar: Table of Contents */}
         <Col lg={4} xl={3}>
-          <AuthorCard />
+          {post && <TableOfContents content={post.content} />}
         </Col>
 
         {/* Right side: Article content */}
         <Col lg={8} xl={9}>
-          {/* Back button */}
-          <div className="mb-3">
-            <Button 
-              variant="outline-secondary" 
-              size="sm"
-              onClick={() => navigate('/')}
-              className="d-flex align-items-center gap-2"
-            >
-              <i className="bi bi-arrow-left"></i>
-              Back to Home
-            </Button>
-          </div>
-
           {/* Article header */}
           <article>
             {/* Category and meta info */}
