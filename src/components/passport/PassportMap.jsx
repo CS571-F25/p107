@@ -67,12 +67,28 @@ function MapBoundsHandler({ points }) {
   return null;
 }
 
+function MapViewController({ targetPoint }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (targetPoint && targetPoint.coords && targetPoint.coords.length === 2) {
+      map.setView([targetPoint.coords[0], targetPoint.coords[1]], 12, {
+        animate: true,
+        duration: 1
+      });
+    }
+  }, [targetPoint, map]);
+
+  return null;
+}
+
 export default function PassportMap() {
   const [points, setPoints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState(null); // selected point
   const [selectedPost, setSelectedPost] = useState(null);
+  const [mapTarget, setMapTarget] = useState(null);
 
   // Theme support - use ThemeContext (dark/light)
   const { theme } = useContext(ThemeContext) || { theme: 'light' };
@@ -119,6 +135,12 @@ export default function PassportMap() {
     }
   };
 
+  const handleLocationClick = (point) => {
+    setMapTarget(point);
+    setSelected(point);
+    handleMarkerClick(point);
+  };
+
   // Default view: center on first point or world view
   const center = useMemo(() => {
     if (points.length > 0) {
@@ -154,6 +176,7 @@ export default function PassportMap() {
         <MapContainer center={center} zoom={4} style={{ height: '100%', width: '100%' }}>
           <TileLayer url={tileUrl} />
           <MapBoundsHandler points={points} />
+          <MapViewController targetPoint={mapTarget} />
 
           {points.map(pt => {
             const lat = pt.coords?.[0];
@@ -215,8 +238,43 @@ export default function PassportMap() {
 
             <hr />
             <div>
-              <strong>{points.length}</strong> locations
+              <strong>{points.length}</strong> location{points.length !== 1 ? 's' : ''}
             </div>
+
+            {points.length > 0 && (
+              <div className="mt-3">
+                <ul className="list-unstyled mb-0" style={{ fontSize: '0.9rem' }}>
+                  {[...points]
+                    .sort((a, b) => (a.title || '').localeCompare(b.title || ''))
+                    .map(point => (
+                      <li key={point.id} className="mb-1">
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleLocationClick(point);
+                          }}
+                          className="text-decoration-none d-flex align-items-center gap-2"
+                          style={{
+                            color: selected?.id === point.id ? (isDark ? '#60a5fa' : '#0d6efd') : 'inherit',
+                            fontWeight: selected?.id === point.id ? 'bold' : 'normal'
+                          }}
+                        >
+                          <i 
+                            className={`bi bi-${point.status === 'completed' ? 'check-circle-fill' : 'circle'}`}
+                            style={{ 
+                              fontSize: '0.75rem',
+                              color: point.status === 'completed' ? '#22c55e' : '#fbbf24'
+                            }}
+                          ></i>
+                          <span>{point.title}</span>
+                        </a>
+                      </li>
+                    ))
+                  }
+                </ul>
+              </div>
+            )}
           </Card.Body>
         </Card>
       </aside>
