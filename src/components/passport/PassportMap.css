@@ -15,23 +15,43 @@
   max-width: 100%;
 }
 
-/* Marker styles (DivIcon will carry these classes) */
+/* Modern Marker styles */
 .passport-marker {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease;
 }
 
-.passport-marker.completed span {
-  background: #0d6efd; /* bootstrap primary */
-  border: 2px solid rgba(13,110,253,0.9);
+.passport-marker:hover {
+  transform: scale(1.15);
+  z-index: 1000 !important;
 }
 
-.passport-marker.planned span {
-  background: rgba(13,110,253,0.15);
-  border: 2px dashed rgba(13,110,253,0.6);
+.passport-marker.completed {
+  animation: pulse-completed 2s ease-in-out infinite;
+}
+
+.passport-marker.planned {
+  animation: pulse-planned 2s ease-in-out infinite;
+}
+
+@keyframes pulse-completed {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes pulse-planned {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Responsive: on small screens make sidebar appear below map */

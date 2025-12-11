@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useContext } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './PassportMap.css';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config.js';
@@ -10,15 +10,62 @@ import { Card, Button } from 'react-bootstrap';
 import ThemeContext from '../contexts/ThemeContext.jsx';
 
 // Small helper to create a consistent DivIcon for markers
-const createDivIcon = (status, size = 24) => {
+const createDivIcon = (status, size = 32) => {
+  const isCompleted = status === 'completed';
   const className = `passport-marker ${status}`;
+  
   return L.divIcon({
     className,
-    html: `<span style="width:${size}px;height:${size}px;display:inline-block;border-radius:50%"></span>`,
+    html: `
+      <div style="
+        width: ${size}px;
+        height: ${size}px;
+        background: ${isCompleted ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'};
+        border: 3px solid white;
+        border-radius: 50%;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 0 0 4px ${isCompleted ? 'rgba(102, 126, 234, 0.2)' : 'rgba(245, 87, 108, 0.2)'};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      ">
+        <i class="bi bi-${isCompleted ? 'geo-alt-fill' : 'geo-alt'}" style="color: white; font-size: ${size * 0.5}px;"></i>
+      </div>
+    `,
     iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2]
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -size / 2]
   });
 };
+
+function MapBoundsHandler({ points }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (points && points.length > 0) {
+      const validPoints = points.filter(pt => 
+        pt.coords && 
+        pt.coords.length === 2 && 
+        typeof pt.coords[0] === 'number' && 
+        typeof pt.coords[1] === 'number'
+      );
+
+      if (validPoints.length === 0) return;
+
+      if (validPoints.length === 1) {
+        // 如果只有一个点，居中并设置合适的缩放级别
+        map.setView([validPoints[0].coords[0], validPoints[0].coords[1]], 10);
+      } else {
+        // 如果有多个点，计算边界并自动适配
+        const bounds = L.latLngBounds(validPoints.map(pt => [pt.coords[0], pt.coords[1]]));
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+  }, [points, map]);
+
+  return null;
+}
 
 export default function PassportMap() {
   const [points, setPoints] = useState([]);
@@ -74,10 +121,22 @@ export default function PassportMap() {
 
   // Default view: center on first point or world view
   const center = useMemo(() => {
-    if (points.length > 0 && points[0].coords && points[0].coords.length === 2) {
-      return [points[0].coords[0], points[0].coords[1]];
+    if (points.length > 0) {
+      const validPoints = points.filter(pt => 
+        pt.coords && 
+        pt.coords.length === 2 && 
+        typeof pt.coords[0] === 'number' && 
+        typeof pt.coords[1] === 'number'
+      );
+      
+      if (validPoints.length > 0) {
+        // 计算所有点的中心
+        const avgLat = validPoints.reduce((sum, pt) => sum + pt.coords[0], 0) / validPoints.length;
+        const avgLng = validPoints.reduce((sum, pt) => sum + pt.coords[1], 0) / validPoints.length;
+        return [avgLat, avgLng];
+      }
     }
-    return [20, 0];
+    return [20, 0]; // 默认世界视图
   }, [points]);
 
   // Tile layer selection for dark/light
@@ -94,6 +153,7 @@ export default function PassportMap() {
       <div className="map-area flex-fill" style={{ minHeight: 360 }}>
         <MapContainer center={center} zoom={4} style={{ height: '100%', width: '100%' }}>
           <TileLayer url={tileUrl} />
+          <MapBoundsHandler points={points} />
 
           {points.map(pt => {
             const lat = pt.coords?.[0];
