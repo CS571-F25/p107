@@ -20,10 +20,13 @@ import {
   updateMapPoint, 
   deleteMapPoint 
 } from '../../services/passportService';
+import { getPosts } from '../../services/blogService';
 
 export default function PassportManagement() {
   const [points, setPoints] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const { theme } = useContext(ThemeContext);
@@ -34,6 +37,7 @@ export default function PassportManagement() {
   const [editingId, setEditingId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [pointToDelete, setPointToDelete] = useState(null);
+  const [postSearchQuery, setPostSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     coords: [0, 0],
@@ -44,6 +48,7 @@ export default function PassportManagement() {
   // Fetch points on mount
   useEffect(() => {
     fetchPoints();
+    fetchPosts();
   }, []);
 
   const fetchPoints = async () => {
@@ -57,6 +62,19 @@ export default function PassportManagement() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPosts = async () => {
+    try {
+      setPostsLoading(true);
+      const allPosts = await getPosts(1000, { status: 'published-only' });
+      setPosts(allPosts.filter(post => post.title && post.id));
+    } catch (err) {
+      console.warn('Failed to load posts:', err);
+      setPosts([]);
+    } finally {
+      setPostsLoading(false);
     }
   };
 
@@ -78,6 +96,7 @@ export default function PassportManagement() {
         postId: ''
       });
     }
+    setPostSearchQuery('');
     setShowModal(true);
   };
 
@@ -207,41 +226,44 @@ export default function PassportManagement() {
                       </td>
                     </tr>
                   ) : (
-                    points.map(point => (
-                      <tr key={point.id}>
-                        <td>
-                          <strong>{point.title}</strong>
-                        </td>
-                        <td className="font-monospace">{point.coords?.[0]?.toFixed(4) || '-'}</td>
-                        <td className="font-monospace">{point.coords?.[1]?.toFixed(4) || '-'}</td>
-                        <td>
-                          <Badge 
-                            bg={point.status === 'completed' ? 'success' : 'warning'}
-                            className="text-capitalize"
-                          >
-                            {point.status}
-                          </Badge>
-                        </td>
-                        <td>{point.postId ? <code className="text-muted">{point.postId.slice(0, 8)}...</code> : '-'}</td>
-                        <td className="text-end">
-                            <Button
-                                variant="outline-info"
-                                size="sm"
-                                onClick={() => handleShowModal(point)}
-                                className="me-2"
+                    points.map(point => {
+                      const relatedPost = posts.find(p => p.id === point.postId);
+                      return (
+                        <tr key={point.id}>
+                          <td>
+                            <strong>{point.title}</strong>
+                          </td>
+                          <td className="font-monospace">{point.coords?.[0]?.toFixed(4) || '-'}</td>
+                          <td className="font-monospace">{point.coords?.[1]?.toFixed(4) || '-'}</td>
+                          <td>
+                            <Badge 
+                              bg={point.status === 'completed' ? 'success' : 'warning'}
+                              className="text-capitalize"
                             >
-                                <i className="bi bi-pencil"></i>
+                              {point.status}
+                            </Badge>
+                          </td>
+                          <td>{relatedPost ? relatedPost.title : '-'}</td>
+                          <td className="text-end">
+                            <Button
+                              variant="outline-info"
+                              size="sm"
+                              onClick={() => handleShowModal(point)}
+                              className="me-2"
+                            >
+                              <i className="bi bi-pencil"></i>
                             </Button>
                             <Button
-                                variant="outline-danger"
-                                size="sm"
-                                onClick={() => handleDeleteClick(point)}
+                              variant="outline-danger"
+                              size="sm"
+                              onClick={() => handleDeleteClick(point)}
                             >
-                                <i className="bi bi-trash"></i>
+                              <i className="bi bi-trash"></i>
                             </Button>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </Table>
@@ -317,16 +339,44 @@ export default function PassportManagement() {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Post ID (Optional)</Form.Label>
-              <Form.Control
-                type="text"
-                name="postId"
-                value={formData.postId}
-                onChange={handleFormChange}
-                placeholder="Leave empty if no associated post"
-              />
+              <Form.Label>Associated Post (Optional)</Form.Label>
+              {postsLoading ? (
+                <div className="text-muted">
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  Loading posts...
+                </div>
+              ) : (
+                <>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search posts by title..."
+                    value={postSearchQuery}
+                    onChange={(e) => setPostSearchQuery(e.target.value)}
+                    className="mb-2"
+                  />
+                  <Form.Select
+                    name="postId"
+                    value={formData.postId}
+                    onChange={handleFormChange}
+                    size={Math.min(posts.filter(p => 
+                      p.title.toLowerCase().includes(postSearchQuery.toLowerCase())
+                    ).length + 1, 8)}
+                  >
+                    <option value="">-- No post --</option>
+                    {posts
+                      .filter(p => 
+                        p.title.toLowerCase().includes(postSearchQuery.toLowerCase())
+                      )
+                      .map(post => (
+                        <option key={post.id} value={post.id}>
+                          {post.title}
+                        </option>
+                      ))}
+                  </Form.Select>
+                </>
+              )}
               <Form.Text className="text-muted">
-                Connect to a blog post to show preview on map
+                Search and select a published blog post to show preview on map
               </Form.Text>
             </Form.Group>
           </Form>

@@ -89,6 +89,7 @@ export default function PassportMap() {
   const [selected, setSelected] = useState(null); // selected point
   const [selectedPost, setSelectedPost] = useState(null);
   const [mapTarget, setMapTarget] = useState(null);
+  const listRefs = React.useRef({});
 
   // Theme support - use ThemeContext (dark/light)
   const { theme } = useContext(ThemeContext) || { theme: 'light' };
@@ -118,6 +119,12 @@ export default function PassportMap() {
     fetchPoints();
     return () => { mounted = false; };
   }, []);
+
+  useEffect(() => {
+    if (selected && listRefs.current[selected.id]) {
+      listRefs.current[selected.id].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selected]);
 
   const handleMarkerClick = async (point) => {
     setSelected(point);
@@ -201,7 +208,7 @@ export default function PassportMap() {
         <Card className="h-100">
           <Card.Body>
             <Card.Title>Passport Map</Card.Title>
-            <Card.Subtitle className="mb-2 text-muted">Travel & posts</Card.Subtitle>
+            {/* <Card.Subtitle className="mb-2 text-muted">Travel & posts</Card.Subtitle> */}
 
             {loading && <div className="text-muted">Loading map points…</div>}
             {error && <div className="text-danger">{error}</div>}
@@ -247,7 +254,17 @@ export default function PassportMap() {
                   {[...points]
                     .sort((a, b) => (a.title || '').localeCompare(b.title || ''))
                     .map(point => (
-                      <li key={point.id} className="mb-1">
+                      <li 
+                        key={point.id}
+                        ref={(el) => { if (el) listRefs.current[point.id] = el; }}
+                        className="mb-1"
+                        style={{
+                          padding: '0.5rem',
+                          borderRadius: '4px',
+                          backgroundColor: selected?.id === point.id ? (isDark ? '#374151' : '#e9ecef') : 'transparent',
+                          transition: 'background-color 0.2s'
+                        }}
+                      >
                         <a
                           href="#"
                           onClick={(e) => {
