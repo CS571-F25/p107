@@ -16,6 +16,7 @@ const AdminLayout = () => {
   const navLinks = [
     { path: '/admin/posts', label: 'Post Management', requiredPermission: canManagePosts(currentRole) },
     { path: '/admin/roles', label: 'Role Management', requiredPermission: canManageRoles(currentRole) },
+    { path: '/admin/passport', label: 'Passport Management', requiredPermission: canManageRoles(currentRole) }, // 添加这行
     { path: '/admin/setup', label: 'System Setup', requiredPermission: canAccessSystemSetup(currentRole) },
   ];
 

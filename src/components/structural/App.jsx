@@ -26,6 +26,7 @@ const PassportMap = lazy(() => import('../passport/PassportMap.jsx'));
 const PostManagement = lazy(() => import("../admin/PostManagement.jsx"));
 const RoleManagement = lazy(() => import('../admin/RoleManagement.jsx'));
 const SystemSetup = lazy(() => import("../admin/SystemSetup.jsx"));
+const PassportManagement = lazy(() => import("../admin/PassportManagement.jsx"));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -61,6 +62,7 @@ export default function App() {
                     <Route path="posts" element={<PostManagement />} />
                     <Route path="roles" element={<RoleManagement />} />
                     <Route path="setup" element={<SystemSetup />} />
+                    <Route path="passport" element={<PassportManagement />} />
                   </Route>
 
                   {/* Auth routes */}
