@@ -4,10 +4,10 @@ import './PassportMap.css';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { getPost, generateExcerpt } from '../services/blogService';
+import { db } from '../../firebase/config.js';
+import { getPost, generateExcerpt } from '../../services/blogService.js';
 import { Card, Button } from 'react-bootstrap';
-import ThemeContext from './contexts/ThemeContext.jsx';
+import ThemeContext from '../contexts/ThemeContext.jsx';
 
 // Small helper to create a consistent DivIcon for markers
 const createDivIcon = (status, size = 24) => {

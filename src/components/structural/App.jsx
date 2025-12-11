@@ -20,7 +20,7 @@ const Logout = lazy(() => import("../auth/Logout"));
 const ForgotPassword = lazy(() => import("../auth/ForgotPassword"));
 const BlogPost = lazy(() => import("../blog/BlogPost.jsx"));
 const BlogEditor = lazy(() => import("../blog/BlogEditor.jsx"));
-const PassportMap = lazy(() => import('../PassportMap.jsx'));
+const PassportMap = lazy(() => import('../passport/PassportMap.jsx'));
 
 // Admin components
 const PostManagement = lazy(() => import("../admin/PostManagement.jsx"));
