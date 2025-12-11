@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useContext } from 'react';
+import { useNavigate } from 'react-router';
 import 'leaflet/dist/leaflet.css';
 import './PassportMap.css';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
@@ -83,6 +84,7 @@ function MapViewController({ targetPoint }) {
 }
 
 export default function PassportMap() {
+  const navigate = useNavigate();
   const [points, setPoints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -136,7 +138,12 @@ export default function PassportMap() {
         const preview = post.content ? generateExcerpt(post.content, 220) : post.excerpt || '';
         setSelectedPost({ ...post, preview });
       } catch (err) {
-        console.warn('Could not load post preview:', err);
+        // Silently handle permission errors - guest users can't access posts
+        if (err.code === 'permission-denied' || err.message?.includes('permission')) {
+          console.log('Post preview not available for guests');
+        } else {
+          console.warn('Could not load post preview:', err);
+        }
         setSelectedPost(null);
       }
     }
@@ -178,9 +185,9 @@ export default function PassportMap() {
   const plannedIcon = createDivIcon('planned');
 
   return (
-    <div className="passport-map-root d-flex flex-column flex-lg-row gap-3">
-      <div className="map-area flex-fill" style={{ minHeight: 360 }}>
-        <MapContainer center={center} zoom={4} style={{ height: '100%', width: '100%' }}>
+    <div className="passport-map-root d-flex flex-column flex-lg-row gap-3" role="main">
+      <div className="map-area flex-fill" role="region" aria-label="Interactive travel map">
+        <MapContainer center={center} zoom={4} style={{ height: '100%', width: '100%' }} role="application" aria-label="Leaflet map showing travel locations">
           <TileLayer url={tileUrl} />
           <MapBoundsHandler points={points} />
           <MapViewController targetPoint={mapTarget} />
@@ -204,11 +211,11 @@ export default function PassportMap() {
         </MapContainer>
       </div>
 
-      <aside className="map-sidebar" aria-live="polite">
+      <aside className="map-sidebar" aria-label="Passport map locations sidebar">
         <Card className="h-100">
           <Card.Body>
-            <Card.Title>Passport Map</Card.Title>
-            {/* <Card.Subtitle className="mb-2 text-muted">Travel & posts</Card.Subtitle> */}
+            <h2 className="card-title">Passport Map</h2>
+            <p className="text-muted mb-3">Travel & posts</p>
 
             {loading && <div className="text-muted">Loading map points…</div>}
             {error && <div className="text-danger">{error}</div>}
@@ -226,7 +233,11 @@ export default function PassportMap() {
                   <>
                     <div className="mb-3">{selectedPost.preview}</div>
                     <div className="d-flex gap-2">
-                      <Button variant="primary" size="sm" href={`/blog/${selectedPost.slug || selectedPost.id}`}>
+                      <Button 
+                        variant="primary" 
+                        size="sm" 
+                        onClick={() => navigate(`/blog/${selectedPost.slug || selectedPost.id}`)}
+                      >
                         View Post
                       </Button>
                       <Button variant="outline-secondary" size="sm" onClick={() => {
@@ -238,19 +249,29 @@ export default function PassportMap() {
                     </div>
                   </>
                 ) : (
-                  <div className="text-muted">No preview available</div>
+                  <div>
+                    <div className="text-muted mb-2">
+                      {selected.postId ? 'Post preview not available. Please sign in to view.' : 'No associated post.'}
+                    </div>
+                    <Button variant="outline-secondary" size="sm" onClick={() => {
+                      setSelected(null);
+                      setSelectedPost(null);
+                    }}>
+                      Close
+                    </Button>
+                  </div>
                 )}
               </div>
             )}
 
             <hr />
-            <div>
+            <h3 className="h6 mb-3" id="locations-heading">
               <strong>{points.length}</strong> location{points.length !== 1 ? 's' : ''}
-            </div>
+            </h3>
 
             {points.length > 0 && (
-              <div className="mt-3">
-                <ul className="list-unstyled mb-0" style={{ fontSize: '0.9rem' }}>
+              <nav aria-labelledby="locations-heading">
+                <ul className="list-unstyled mb-0" style={{ fontSize: '0.9rem' }} role="list">
                   {[...points]
                     .sort((a, b) => (a.title || '').localeCompare(b.title || ''))
                     .map(point => (
@@ -258,6 +279,8 @@ export default function PassportMap() {
                         key={point.id}
                         ref={(el) => { if (el) listRefs.current[point.id] = el; }}
                         className="mb-1"
+                        role="listitem"
+                        aria-current={selected?.id === point.id ? 'location' : undefined}
                         style={{
                           padding: '0.5rem',
                           borderRadius: '4px',
@@ -271,6 +294,7 @@ export default function PassportMap() {
                             e.preventDefault();
                             handleLocationClick(point);
                           }}
+                          aria-label={`${point.title} - Status: ${point.status}`}
                           className="text-decoration-none d-flex align-items-center gap-2"
                           style={{
                             color: selected?.id === point.id ? (isDark ? '#60a5fa' : '#0d6efd') : 'inherit',
@@ -279,6 +303,7 @@ export default function PassportMap() {
                         >
                           <i 
                             className={`bi bi-${point.status === 'completed' ? 'check-circle-fill' : 'circle'}`}
+                            aria-hidden="true"
                             style={{ 
                               fontSize: '0.75rem',
                               color: point.status === 'completed' ? '#22c55e' : '#fbbf24'
@@ -290,7 +315,7 @@ export default function PassportMap() {
                     ))
                   }
                 </ul>
-              </div>
+              </nav>
             )}
           </Card.Body>
         </Card>

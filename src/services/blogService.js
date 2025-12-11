@@ -199,11 +199,17 @@ export const getPost = async (postId) => {
       throw new Error('You do not have permission to view this post');
     }
     
-    // Increment view count only for published posts
-    if (data.status === POST_STATUS.PUBLISHED) {
-      await updateDoc(docRef, {
-        views: (data.views || 0) + 1
-      });
+    // Increment view count only for published posts and authenticated users
+    // Skip for guest users to avoid permission errors
+    if (data.status === POST_STATUS.PUBLISHED && userId) {
+      try {
+        await updateDoc(docRef, {
+          views: (data.views || 0) + 1
+        });
+      } catch (err) {
+        // Silently fail if user doesn't have write permission
+        console.log('Could not update view count (user may not have permission)');
+      }
     }
 
     const post = {
@@ -212,7 +218,7 @@ export const getPost = async (postId) => {
       publishedAt: data.publishedAt?.toDate(),
       createdAt: data.createdAt?.toDate(),
       updatedAt: data.updatedAt?.toDate(),
-      views: (data.views || 0) + (data.status === POST_STATUS.PUBLISHED ? 1 : 0)
+      views: (data.views || 0) + (data.status === POST_STATUS.PUBLISHED && userId ? 1 : 0)
     };
 
     // Add like information

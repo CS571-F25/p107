@@ -29,6 +29,9 @@ export default defineConfig({
             './src/components/blog/BlogCard.jsx',
             './src/components/blog/BlogPost.jsx',
             './src/components/blog/AuthorCard.jsx'
+          ],
+          'passport': [
+            './src/components/passport/PassportMap.jsx'
           ]
         }
       }
